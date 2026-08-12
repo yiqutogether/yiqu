@@ -1,0 +1,11 @@
+.env
+.env.*
+密钥库.md
+*密钥*
+*.pem
+*.key
+node_modules/
+dist/
+coverage/
+.DS_Store
+Thumbs.db
