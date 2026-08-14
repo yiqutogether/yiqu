@@ -691,10 +691,16 @@
     };
     const pct = (value) => (value == null || !Number.isFinite(value)) ? "-" : `${value.toFixed(1)}%`;
     const htmlOf = (node) => node ? node.innerHTML : "";
+    const decodeEntities = (value) => {
+      const textarea = doc.createElement("textarea");
+      textarea.innerHTML = String(value || "");
+      return textarea.value;
+    };
     const parseAd = (input) => {
-      if (input && input.dataset && input.dataset.ad) {
+      const datasetAd = input && input.dataset && input.dataset.ad ? input.dataset.ad : "";
+      if (datasetAd) {
         try {
-          const ad = JSON.parse(input.dataset.ad);
+          const ad = JSON.parse(decodeEntities(datasetAd));
           const clicks = numberFrom(ad.clicks);
           const impressions = numberFrom(ad.impressions);
           const spend = numberFrom(ad.spend);
