@@ -540,6 +540,10 @@
       table { min-width: 2520px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
       th, td { position: relative; font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
       th { color: #17324d !important; background: #eef4fb !important; }
+      .th-label { display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 12px); white-space: normal; line-height: 1.25; vertical-align: middle; }
+      .th-help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9fb7d8; border-radius: 999px; color: #2f6fce; background: #fff; font-size: 10px; font-weight: 800; cursor: help; }
+      .th-help::after { content: attr(data-tip); position: fixed; left: var(--tip-x, 0); top: var(--tip-y, 0); z-index: 99999; display: none; width: max-content; max-width: 330px; padding: 9px 10px; border-radius: 6px; background: rgba(23, 32, 51, .96); color: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, .22); font-size: 12px; line-height: 1.45; font-weight: 500; text-align: left; white-space: normal; pointer-events: none; }
+      .th-help:hover::after { display: block; }
       th[data-col-index] { user-select: none; }
       th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 8; }
       th .resize-handle::after { content: ""; position: absolute; top: 9px; bottom: 9px; right: 3px; width: 2px; border-radius: 2px; background: rgba(47, 111, 206, .28); }
@@ -892,9 +896,32 @@
 
     const thead = table.querySelector("thead");
     if (thead) {
+      const h = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" data-tip="${escapeHtml(tip)}" title="${escapeHtml(tip)}">?</span></span>`;
       thead.innerHTML =
-        `<tr class="group-row"><th rowspan="2">关键词 / 标签</th><th rowspan="2">ASIN总流量</th><th class="group-market" colspan="5">市场</th><th class="group-competition" colspan="1">竞对</th><th class="group-self" colspan="1">自身</th><th class="group-ad" colspan="6">广告报表数据</th><th rowspan="2">打法建议</th></tr>` +
-        `<tr><th>搜索量 + ABA 12月</th><th>难度</th><th>建议竞价</th><th>市场转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
+        `<tr class="group-row">` +
+        `<th rowspan="2">${h("关键词 / 标签", "关键词来自西柚按目标 ASIN 反查出的相关词；标签由前台根据打法建议、搜索量、难度和广告表现补充，用于运营扫表。")}</th>` +
+        `<th rowspan="2">${h("ASIN总流量", "来自西柚 ASIN 反查关键词结果，表示该关键词给目标 ASIN 带来的流量估算；不是市场总搜索量，也不是广告展示。")}</th>` +
+        `<th class="group-market" colspan="5">${h("市场", "来自西柚关键词信息、ABA 趋势和市场转化字段，用来判断搜索热度、竞争强度、竞价和季节性。")}</th>` +
+        `<th class="group-competition" colspan="1">${h("竞对", "来自西柚关键词下 ASIN 分析，展示该词点击前三 ASIN、主图和流量/点击相关数据。")}</th>` +
+        `<th class="group-self" colspan="1">${h("自身", "来自西柚关键词下目标 ASIN 的自然搜索位置，用来判断自己是否已经有自然位优势。")}</th>` +
+        `<th class="group-ad" colspan="6">${h("广告报表数据", "来自你上传的 SP 广告搜索词报表，按搜索词聚合展示、点击、订单、花费和销售额，并重算 CTR、CVR、CPC、ACOS。")}</th>` +
+        `<th rowspan="2">${h("打法建议", "由豆包按已确认的标签规则生成：守住放大、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰或数据缺失。")}</th>` +
+        `</tr>` +
+        `<tr>` +
+        `<th>${h("搜索量 + ABA 12月", "最新周搜索量来自西柚 ABA 周搜索量；柱状图为近 52 周聚合成近 12 个月趋势，点击可看周日期区间、搜索量和 ABA 排名。")}</th>` +
+        `<th>${h("难度", "来自西柚关键词投放难度，数值越高代表竞争越强；当前前台按低/中/高给颜色提示，难度 ≥ 85 视为竞争强。")}</th>` +
+        `<th>${h("建议竞价", "来自西柚关键词建议竞价，主数字为建议 CPC，下面显示建议区间，用于判断出价起点。")}</th>` +
+        `<th>${h("市场转化相关", "来自西柚关键词市场转化字段，优先展示市场点击转化率等大盘转化信息；不是你的广告报表 CVR。")}</th>` +
+        `<th>${h("季节性标注", "根据近 12 个月 ABA 趋势自动判断抬升、回落、平稳或波动，帮助识别淡旺季。")}</th>` +
+        `<th>${h("点击前三ASIN", "来自西柚关键词 ASIN 分析，展示该词点击前三的 ASIN、主图和流量/点击相关信息，用于看头部垄断和最强竞对。")}</th>` +
+        `<th>${h("自然位", "目标 ASIN 在该关键词自然搜索结果中的位置；数字越小越靠前，显示“无”代表没有拿到自然位。")}</th>` +
+        `<th>${h("展示", "来自上传广告报表的展示量，按搜索词汇总；表示广告被展示的次数。")}</th>` +
+        `<th>${h("点击/CTR", "点击来自广告报表点击量；CTR=点击/展示，显示在底下小字，用来判断广告吸引点击能力。")}</th>` +
+        `<th>${h("CPC", "由广告报表重算：CPC=花费/点击；用于判断当前点击成本是否偏高。")}</th>` +
+        `<th>${h("订单/CVR", "订单来自广告报表 7 天总订单；CVR=订单/点击，显示在底下小字，用来判断广告转化效率。")}</th>` +
+        `<th>${h("花费", "来自广告报表花费汇总，按搜索词聚合。")}</th>` +
+        `<th>${h("销售额/ACOS", "销售额来自广告报表 7 天总销售额；ACOS=花费/销售额，显示在底下小字，是打法标签的重要判断依据。")}</th>` +
+        `</tr>`;
     }
     const oldColgroup = table.querySelector("colgroup");
     if (oldColgroup) oldColgroup.remove();
@@ -916,6 +943,12 @@
       });
       thead.querySelectorAll("th[data-col-index]").forEach((th) => {
         th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
+      });
+      thead.querySelectorAll(".th-help").forEach((help) => {
+        help.addEventListener("mousemove", (event) => {
+          help.style.setProperty("--tip-x", `${Math.min(event.clientX + 12, window.innerWidth - 360)}px`);
+          help.style.setProperty("--tip-y", `${Math.min(event.clientY + 14, window.innerHeight - 130)}px`);
+        });
       });
     }
 
