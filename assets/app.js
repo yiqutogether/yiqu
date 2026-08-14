@@ -329,65 +329,167 @@
   function polishReportHtml(html) {
     const style = `
       <style>
-        table { min-width: 1680px !important; table-layout: fixed !important; }
-        th:nth-child(4), td:nth-child(4) { width: 250px !important; }
-        th:nth-child(8), td:nth-child(8) { width: 230px !important; }
-        .trend-list { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; line-height: 1.4; }
-        .trend-point { display: inline-flex; align-items: center; min-width: 38px; color: #344054; }
-        .trend-arrow { color: #98a2b3; }
-        .asin { display: grid !important; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: center; }
-        .asin img, .image-fallback { width: 34px; height: 34px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 3px; }
-        .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 11px; font-weight: 700; }
+        body { background: #f3f6fa !important; color: #172033 !important; }
+        header { display: none !important; }
+        main { max-width: 1680px; margin: 0 auto; padding: 22px 24px 36px !important; }
+        .report-hero { margin-bottom: 14px; padding: 22px 24px; border-radius: 8px; color: #fff; background: linear-gradient(120deg, #123a70, #2468d8); }
+        .report-hero h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
+        .report-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .metric-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 13px 16px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
+        .metric-card span { display: block; color: #667085; font-size: 12px; margin-bottom: 6px; }
+        .metric-card strong { display: block; color: #0f172a; font-size: 22px; line-height: 1.1; }
+        .table-title { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+        .table-title h2 { margin: 0; font-size: 18px; }
+        .table-title span { color: #667085; font-size: 12px; }
+        .table-wrap { border-radius: 8px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
+        table { min-width: 1740px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
+        th, td { font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; }
+        th { color: #17324d !important; background: #eef4fb !important; }
+        tbody tr:nth-child(even) td { background: #fbfdff; }
+        tbody tr:hover td { background: #f6fbff; }
+        th:nth-child(1), td:nth-child(1) { width: 180px; position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+        thead th:nth-child(1) { z-index: 4; background: #e9f0f8 !important; }
+        th:nth-child(4), td:nth-child(4) { width: 170px !important; }
+        th:nth-child(8), td:nth-child(8) { width: 250px !important; }
+        th:nth-child(10), td:nth-child(10) { width: 270px !important; }
+        .group-row th { text-align: center !important; font-weight: 700; border-bottom: 1px solid #cad6e3 !important; }
+        .group-market { background: #eaf7f2 !important; color: #006b55 !important; }
+        .group-competition { background: #fff4e5 !important; color: #9a5a00 !important; }
+        .group-self { background: #eef4ff !important; color: #2452b8 !important; }
+        .group-ad { background: #f4f0ff !important; color: #6941c6 !important; }
+        .sparkline { width: 140px; height: 40px; display: block; }
+        .sparkline path { fill: none; stroke: #2f6fce; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .sparkline polyline { fill: none; stroke: #2f6fce; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .sparkline text { fill: #667085; font-size: 10px; }
+        .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
+        .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
+        .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
+        .tag { border-radius: 999px !important; padding: 3px 8px !important; background: #e7f0ff !important; color: #175cd3 !important; }
       </style>
     `;
     const script = `
       <script>
         (function () {
-          document.querySelectorAll("tbody tr").forEach(function (row) {
-            var trendCell = row.cells && row.cells[3];
-            if (trendCell && !trendCell.querySelector(".trend-list")) {
-              var parts = trendCell.textContent.split(/\\s*→\\s*/).map(function (item) { return item.trim(); }).filter(Boolean);
-              if (parts.length > 1) {
-                trendCell.textContent = "";
-                var wrap = document.createElement("div");
-                wrap.className = "trend-list";
-                parts.forEach(function (part, index) {
-                  if (index > 0) {
-                    var arrow = document.createElement("span");
-                    arrow.className = "trend-arrow";
-                    arrow.innerHTML = "&rarr;";
-                    wrap.appendChild(arrow);
-                  }
-                  var point = document.createElement("span");
-                  point.className = "trend-point";
-                  point.textContent = part;
-                  wrap.appendChild(point);
-                });
-                trendCell.appendChild(wrap);
+          function text(node) { return (node && node.textContent || "").trim(); }
+          function numberFrom(value) {
+            var n = Number(String(value || "").replace(/[^0-9.\\-]/g, ""));
+            return Number.isFinite(n) ? n : 0;
+          }
+          function compact(value) { return Number(value || 0).toLocaleString("en-US"); }
+          function parseTrend(raw) {
+            return String(raw || "").match(/[0-9.]+\\s*[kKmM]?/g) || [];
+          }
+          function trendValue(part) {
+            var match = String(part || "").match(/([0-9.]+)\\s*([kKmM]?)/);
+            if (!match) return 0;
+            var n = Number(match[1]);
+            var unit = match[2].toLowerCase();
+            if (unit === "m") n *= 1000000;
+            if (unit === "k") n *= 1000;
+            return n;
+          }
+          function sparkline(parts) {
+            var values = parts.map(trendValue).filter(function (n) { return n > 0; });
+            if (values.length < 2) return parts.join(" → ");
+            var min = Math.min.apply(null, values);
+            var max = Math.max.apply(null, values);
+            var spread = max - min || 1;
+            var points = values.map(function (value, index) {
+              var x = 4 + index * (132 / Math.max(1, values.length - 1));
+              var y = 32 - ((value - min) / spread) * 24;
+              return x.toFixed(1) + "," + y.toFixed(1);
+            }).join(" ");
+            return '<svg class="sparkline" viewBox="0 0 144 44" role="img" aria-label="ABA trend"><polyline points="' + points + '"></polyline><text x="4" y="42">' + parts[0] + '</text><text x="104" y="42">' + parts[parts.length - 1] + '</text></svg>';
+          }
+          function fixImages(scope) {
+            scope.querySelectorAll(".asin").forEach(function (node) {
+              var img = node.querySelector("img");
+              var label = (node.textContent || "ASIN").trim().slice(0, 4);
+              function fallback() {
+                var span = document.createElement("span");
+                span.className = "image-fallback";
+                span.textContent = label || "ASIN";
+                if (img && img.parentNode) img.replaceWith(span);
+                else node.insertBefore(span, node.firstChild);
               }
-            }
-          });
+              if (!img || !img.getAttribute("src")) {
+                fallback();
+                return;
+              }
+              if (img.getAttribute("src").indexOf("http://") === 0) {
+                img.setAttribute("src", img.getAttribute("src").replace(/^http:\\/\\//, "https://"));
+              }
+              img.referrerPolicy = "no-referrer";
+              img.loading = "lazy";
+              img.onerror = fallback;
+            });
+          }
 
-          document.querySelectorAll(".asin").forEach(function (node) {
-            var img = node.querySelector("img");
-            var text = (node.textContent || "ASIN").trim().slice(0, 4);
-            function fallback() {
-              var span = document.createElement("span");
-              span.className = "image-fallback";
-              span.textContent = text || "ASIN";
-              if (img && img.parentNode) img.replaceWith(span);
+          var table = document.querySelector("table");
+          if (!table) return;
+          var rows = Array.prototype.slice.call(table.querySelectorAll("tbody tr"));
+          var oldHeader = document.querySelector("header");
+          var oldTitle = oldHeader ? text(oldHeader.querySelector("h1")) : "关键词作战总表";
+          var oldMeta = oldHeader ? text(oldHeader.querySelector(".meta")) : "";
+          var main = document.querySelector("main");
+
+          var adRows = rows.filter(function (row) { return text(row.cells[8]).indexOf("无投放") === -1; });
+          var weeklyTotal = rows.reduce(function (sum, row) { return sum + numberFrom(text(row.cells[2])); }, 0);
+          var avgDifficulty = rows.length ? Math.round(rows.reduce(function (sum, row) { return sum + numberFrom(text(row.cells[4])); }, 0) / rows.length) : 0;
+          var avgAcos = adRows.length ? adRows.reduce(function (sum, row) {
+            var match = text(row.cells[8]).match(/([0-9.]+)%\\s*$/);
+            return sum + (match ? Number(match[1]) : 0);
+          }, 0) / adRows.length : 0;
+
+          var hero = document.createElement("section");
+          hero.className = "report-hero";
+          hero.innerHTML = '<h1>' + oldTitle + '</h1><p>' + oldMeta + '</p>';
+          main.insertBefore(hero, main.firstChild);
+
+          var metrics = document.createElement("section");
+          metrics.className = "metric-grid";
+          metrics.innerHTML =
+            '<div class="metric-card"><span>报告关键词</span><strong>' + rows.length + '</strong></div>' +
+            '<div class="metric-card"><span>合计周搜索量</span><strong>' + compact(weeklyTotal) + '</strong></div>' +
+            '<div class="metric-card"><span>有广告数据</span><strong>' + adRows.length + '</strong></div>' +
+            '<div class="metric-card"><span>平均难度</span><strong>' + avgDifficulty + '</strong></div>' +
+            '<div class="metric-card"><span>广告平均 ACOS</span><strong>' + (avgAcos ? avgAcos.toFixed(1) + '%' : '-') + '</strong></div>';
+          hero.after(metrics);
+
+          var title = document.createElement("div");
+          title.className = "table-title";
+          title.innerHTML = '<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表</span>';
+          metrics.after(title);
+
+          var thead = table.querySelector("thead");
+          if (thead && !thead.querySelector(".group-row")) {
+            var group = document.createElement("tr");
+            group.className = "group-row";
+            group.innerHTML =
+              '<th rowspan="2">关键词</th>' +
+              '<th class="group-market" colspan="5">市场</th>' +
+              '<th class="group-self" colspan="1">自身</th>' +
+              '<th class="group-competition" colspan="1">竞对</th>' +
+              '<th class="group-ad" colspan="1">广告</th>' +
+              '<th rowspan="2">打法建议</th>';
+            var labels = document.createElement("tr");
+            labels.innerHTML =
+              '<th>ASIN总流量</th><th>周搜索量</th><th>ABA 13周</th><th>难度</th><th>建议竞价</th>' +
+              '<th>自然位</th><th>点击前三/竞品</th><th>点击/花费/订单/ACOS</th>';
+            thead.textContent = "";
+            thead.appendChild(group);
+            thead.appendChild(labels);
+          }
+
+          rows.forEach(function (row) {
+            var trendCell = row.cells && row.cells[3];
+            if (trendCell && !trendCell.querySelector(".sparkline")) {
+              var parts = parseTrend(trendCell.textContent);
+              trendCell.innerHTML = parts.length > 1 ? sparkline(parts) : trendCell.textContent;
             }
-            if (!img || !img.getAttribute("src")) {
-              fallback();
-              return;
-            }
-            if (img.getAttribute("src").indexOf("http://") === 0) {
-              img.setAttribute("src", img.getAttribute("src").replace(/^http:\\/\\//, "https://"));
-            }
-            img.referrerPolicy = "no-referrer";
-            img.loading = "lazy";
-            img.onerror = fallback;
           });
+          fixImages(document);
         })();
       <\\/script>
     `;
