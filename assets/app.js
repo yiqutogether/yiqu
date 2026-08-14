@@ -542,8 +542,8 @@
       th { color: #17324d !important; background: #eef4fb !important; }
       .th-label { display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 12px); white-space: normal; line-height: 1.25; vertical-align: middle; }
       .th-help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9fb7d8; border-radius: 999px; color: #2f6fce; background: #fff; font-size: 10px; font-weight: 800; cursor: help; }
-      .th-help::after { content: attr(data-tip); position: fixed; left: var(--tip-x, -9999px); top: var(--tip-y, -9999px); z-index: 99999; display: none; width: max-content; max-width: 330px; padding: 9px 10px; border-radius: 6px; background: rgba(23, 32, 51, .96); color: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, .22); font-size: 12px; line-height: 1.45; font-weight: 500; text-align: left; white-space: normal; pointer-events: none; }
-      .th-help:hover::after { display: block; }
+      .report-header-tip { position: fixed; left: -9999px; top: -9999px; z-index: 99999; display: none; width: max-content; max-width: 360px; padding: 9px 10px; border-radius: 6px; background: rgba(23, 32, 51, .96); color: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, .22); font-size: 12px; line-height: 1.45; font-weight: 500; text-align: left; white-space: normal; pointer-events: none; }
+      .report-header-tip.is-open { display: block; }
       th[data-col-index] { user-select: none; }
       th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 8; }
       th .resize-handle::after { content: ""; position: absolute; top: 9px; bottom: 9px; right: 3px; width: 2px; border-radius: 2px; background: rgba(47, 111, 206, .28); }
@@ -944,13 +944,32 @@
       thead.querySelectorAll("th[data-col-index]").forEach((th) => {
         th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
       });
+      let headerTip = doc.querySelector(".report-header-tip");
+      if (!headerTip) {
+        headerTip = doc.createElement("div");
+        headerTip.className = "report-header-tip";
+        doc.body.appendChild(headerTip);
+      }
+      const view = doc.defaultView || window;
+      const hideHeaderTip = () => {
+        headerTip.classList.remove("is-open");
+        headerTip.style.left = "-9999px";
+        headerTip.style.top = "-9999px";
+      };
       thead.querySelectorAll(".th-help").forEach((help) => {
         const positionTip = (event) => {
-          help.style.setProperty("--tip-x", `${Math.min(event.clientX + 12, window.innerWidth - 360)}px`);
-          help.style.setProperty("--tip-y", `${Math.min(event.clientY + 14, window.innerHeight - 130)}px`);
+          const maxLeft = Math.max(8, view.innerWidth - 380);
+          const maxTop = Math.max(8, view.innerHeight - 150);
+          headerTip.style.left = `${Math.min(event.clientX + 12, maxLeft)}px`;
+          headerTip.style.top = `${Math.min(event.clientY + 14, maxTop)}px`;
         };
-        help.addEventListener("mouseenter", positionTip);
+        help.addEventListener("mouseenter", (event) => {
+          headerTip.textContent = help.getAttribute("data-tip") || "";
+          positionTip(event);
+          headerTip.classList.add("is-open");
+        });
         help.addEventListener("mousemove", positionTip);
+        help.addEventListener("mouseleave", hideHeaderTip);
       });
     }
 
