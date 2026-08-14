@@ -13,6 +13,9 @@
     "已完成": "status-done",
     "失败": "status-failed"
   };
+  const taskDisplayLabels = {
+    "71e93c3f-13d7-4455-97e5-18c7e247a06e": "test"
+  };
 
   function $(selector) {
     return document.querySelector(selector);
@@ -258,12 +261,13 @@
         const statusClass = taskStatusClass[row.status] || "status-pending";
         const createdAt = row.created_at ? new Date(row.created_at).toLocaleString("zh-CN") : "-";
         const failure = row.status === "失败" && row.failure_reason ? `<div class="task-meta">${escapeHtml(row.failure_reason)}</div>` : "";
+        const label = taskDisplayLabels[row.id] ? `<span class="task-label">${escapeHtml(taskDisplayLabels[row.id])}</span>` : "";
         const report = row.status === "已完成" && row.report_url
           ? `<a class="ghost-button" href="../report/?task=${encodeURIComponent(row.id)}">查看报告</a>`
           : "";
         return `
           <article class="task-card">
-            <div><strong>${escapeHtml(row.asin)}</strong><span class="task-meta">${createdAt}</span></div>
+            <div><strong>${escapeHtml(row.asin)}${label}</strong><span class="task-meta">${createdAt}</span></div>
             <div><span class="status-pill ${statusClass}">${escapeHtml(row.status)}</span></div>
             <div class="task-meta">任务号<br>${escapeHtml(row.id.slice(0, 8))}</div>
             <div>${failure}</div>
