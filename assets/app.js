@@ -296,7 +296,8 @@
       if (task.status === "失败") throw new Error(task.failure_reason || "任务处理失败。");
       if (task.status !== "已完成" || !task.report_url) throw new Error("报告还没生成。");
 
-      const response = await fetch(task.report_url);
+      const reportUrl = normalizeReportUrl(task.report_url);
+      const response = await fetch(reportUrl);
       if (!response.ok) throw new Error("报告文件读取失败。");
       const html = await response.text();
       frame.srcdoc = html;
@@ -314,6 +315,13 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function normalizeReportUrl(url) {
+    return String(url || "").replace(
+      /^http:\/\/yiqutogether-tools\.oss-cn-guangzhou\.aliyuncs\.com/i,
+      "https://yiqutogether-tools.oss-cn-guangzhou.aliyuncs.com"
+    );
   }
 
   window.YiquApp = {
