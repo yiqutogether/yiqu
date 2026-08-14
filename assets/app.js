@@ -526,11 +526,13 @@
       .filter-button { cursor: pointer; }
       .filter-button.is-active { border-color: #172033; box-shadow: inset 0 0 0 2px #172033; }
       .dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; }
-      .cat-boost { color: #1677ff; background: #edf5ff; }
-      .cat-keep { color: #12a150; background: #ebf8f0; }
-      .cat-caution { color: #dc2626; background: #fff1f1; }
-      .cat-optimize { color: #d99000; background: #fff7e5; }
-      .cat-stop { color: #667085; background: #f1f3f6; }
+      .cat-guard { color: #1677ff; background: #edf5ff; }
+      .cat-scale { color: #12a150; background: #ebf8f0; }
+      .cat-review { color: #d99000; background: #fff7e5; }
+      .cat-stop { color: #dc2626; background: #fff1f1; }
+      .cat-tail { color: #7a4cc2; background: #f4f0ff; }
+      .cat-avoid { color: #667085; background: #f1f3f6; }
+      .cat-missing { color: #475467; background: #eef2f6; }
       .rule-note { color: #667085; font-size: 13px; line-height: 1.6; }
       tr.is-hidden { display: none; }
       .table-wrap { border-radius: 8px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
@@ -604,21 +606,26 @@
       }, 0) / adRows.length : 0;
 
     const categoryMap = {
-      boost: { label: "加投/防守", className: "cat-boost" },
-      keep: { label: "保持", className: "cat-keep" },
-      caution: { label: "谨慎投放", className: "cat-caution" },
-      optimize: { label: "优化", className: "cat-optimize" },
-      stop: { label: "停止投放/止损", className: "cat-stop" },
+      guard: { label: "守住放大", className: "cat-guard" },
+      scale: { label: "谨慎加码", className: "cat-scale" },
+      review: { label: "降价复查", className: "cat-review" },
+      stop: { label: "暂停止损", className: "cat-stop" },
+      tail: { label: "长尾测试", className: "cat-tail" },
+      avoid: { label: "暂不硬碰", className: "cat-avoid" },
+      missing: { label: "数据缺失", className: "cat-missing" },
     };
     const classifyRow = (row) => {
       const advice = text(row.cells[9]);
+      if (/数据缺失/.test(advice)) return "missing";
       if (/暂停|止损|否定/.test(advice)) return "stop";
-      if (/降价|复查|优化|Listing|查图/.test(advice)) return "optimize";
-      if (/谨慎|长尾|不硬碰|测试/.test(advice)) return "caution";
-      if (/守住|放大|防守|加码/.test(advice)) return "boost";
-      return "keep";
+      if (/降价|复查|Listing|查图/.test(advice)) return "review";
+      if (/长尾|测试/.test(advice)) return "tail";
+      if (/不硬碰|硬碰/.test(advice)) return "avoid";
+      if (/谨慎|加码/.test(advice)) return "scale";
+      if (/守住|放大|防守/.test(advice)) return "guard";
+      return "missing";
     };
-    const counts = { all: rows.length, boost: 0, keep: 0, caution: 0, optimize: 0, stop: 0 };
+    const counts = { all: rows.length, guard: 0, scale: 0, review: 0, stop: 0, tail: 0, avoid: 0, missing: 0 };
     rows.forEach((row) => {
       const category = classifyRow(row);
       row.dataset.category = category;
@@ -659,7 +666,7 @@
         <button class="filter-button is-active" type="button" data-filter="all">全部 ${counts.all}</button>
         ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
       </div>
-      <div class="rule-note">规则口径：谨慎投放 = 证据不足或竞争偏硬，先小预算验证；优化 = 已有花费或转化证据显示效率未达要求，先修复主图/Listing/CPC后再放量；停止投放/止损 = 低相关或高花费无单，优先暂停或否定。</div>
+      <div class="rule-note">规则口径：守住放大 = 有订单且ACOS可接受，优先防守并放大；谨慎加码 = 有机会但竞争或成本偏硬，逐步加预算；降价复查 = 花费或点击偏高，先查图、Listing和CPC；暂停止损 = 低相关或高花费无单，优先暂停/否定；长尾测试 = 大词硬、长尾有机会，低价小预算试；暂不硬碰 = 头部垄断或自身位置弱，先观望；数据缺失 = 接口或报表证据不足。</div>
     `;
     title.after(actionPanel);
 
