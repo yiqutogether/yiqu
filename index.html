@@ -3,11 +3,41 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>关键词作战工具</title>
+    <title>Yiqu-AMZ工作台</title>
+    <link rel="stylesheet" href="./assets/styles.css">
   </head>
-  <body>
-    <main>
-      <h1>关键词作战工具建设中</h1>
+  <body class="auth-page">
+    <main class="auth-shell">
+      <section class="auth-brand" aria-label="品牌">
+        <div class="brand-mark">Y</div>
+        <h1>Yiqu-AMZ工作台</h1>
+        <p>关键词作战台</p>
+      </section>
+
+      <section class="auth-panel" aria-label="登录注册">
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab is-active" type="button" data-auth-mode="login">登录</button>
+          <button class="auth-tab" type="button" data-auth-mode="signup">注册</button>
+        </div>
+
+        <form id="auth-form" class="form-stack">
+          <label>
+            邮箱
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            密码
+            <input id="password" name="password" type="password" autocomplete="current-password" minlength="6" required>
+          </label>
+          <button id="auth-submit" class="primary-button" type="submit">登录</button>
+          <p id="auth-message" class="form-message" role="status"></p>
+        </form>
+      </section>
     </main>
+
+    <script src="./assets/app.js"></script>
+    <script>
+      window.YiquApp.initAuthPage();
+    </script>
   </body>
 </html>

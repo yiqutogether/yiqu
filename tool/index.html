@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>关键词作战台</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+  </head>
+  <body class="app-page">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Yiqu-AMZ工作台</div>
+        <h1>关键词作战台</h1>
+      </div>
+      <button id="logout" class="ghost-button" type="button">退出登录</button>
+    </header>
+
+    <main class="tool-layout">
+      <aside class="submit-panel" aria-label="提交任务">
+        <form id="task-form" class="form-stack">
+          <label>
+            站点
+            <select id="site" name="site">
+              <option value="US">US</option>
+              <option value="CA">CA</option>
+              <option value="MX">MX</option>
+              <option value="UK">UK</option>
+              <option value="DE">DE</option>
+              <option value="FR">FR</option>
+              <option value="IT">IT</option>
+              <option value="ES">ES</option>
+              <option value="JP">JP</option>
+            </select>
+          </label>
+          <label>
+            店铺
+            <input id="store" name="store" type="text" placeholder="待关联">
+          </label>
+          <label>
+            产品分类
+            <input id="category" name="category" type="text" placeholder="待关联">
+          </label>
+          <div class="field-grid">
+            <label>
+              SPU
+              <input id="spu" name="spu" type="text" placeholder="待关联">
+            </label>
+            <label>
+              SKU
+              <input id="sku" name="sku" type="text" placeholder="待关联">
+            </label>
+          </div>
+          <label>
+            ASIN
+            <input id="asin" name="asin" type="text" inputmode="latin" maxlength="10" placeholder="B09V366BDY" required>
+          </label>
+          <label>
+            广告报表
+            <input id="report-file" name="report-file" type="file" accept=".xlsx,.csv" required>
+          </label>
+          <button id="submit-task" class="primary-button" type="submit">提交分析</button>
+          <p id="task-message" class="form-message" role="status"></p>
+        </form>
+      </aside>
+
+      <section class="task-section" aria-label="任务列表">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">我的任务</div>
+            <h2>任务列表</h2>
+          </div>
+          <button id="refresh-tasks" class="ghost-button" type="button">刷新</button>
+        </div>
+        <div id="tasks" class="task-list"></div>
+      </section>
+    </main>
+
+    <script src="../assets/app.js"></script>
+    <script>
+      window.YiquApp.initToolPage();
+    </script>
+  </body>
+</html>
