@@ -579,8 +579,9 @@
       .difficulty-pill.high { background: #fff1f1; color: #dc2626; }
       .bid-main { display: block; font-size: 15px; font-weight: 800; color: #172033; margin-bottom: 4px; }
       .bid-range { display: block; color: #667085; font-size: 11px; }
-      .ad-main { display: block; font-size: 15px; font-weight: 800; color: #172033; }
-      .ad-sub { display: block; color: #667085; font-size: 11px; margin-top: 3px; }
+      .ad-metric { display: grid; gap: 4px; align-content: start; min-height: 40px; }
+      .ad-main { display: block !important; font-size: 15px !important; line-height: 1.15 !important; font-weight: 800 !important; color: #172033 !important; white-space: nowrap; }
+      .ad-sub { display: block !important; color: #667085 !important; font-size: 11px !important; line-height: 1.2 !important; margin-top: 0 !important; white-space: nowrap; }
       .ad-empty { color: #98a2b3; font-weight: 700; }
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
@@ -698,9 +699,11 @@
     };
     const parseAd = (input) => {
       const datasetAd = input && input.dataset && input.dataset.ad ? input.dataset.ad : "";
-      if (datasetAd) {
+      const attrAd = input && input.getAttribute ? input.getAttribute("data-ad") : "";
+      const encodedAd = datasetAd || attrAd || "";
+      if (encodedAd) {
         try {
-          const ad = JSON.parse(decodeEntities(datasetAd));
+          const ad = JSON.parse(decodeEntities(encodedAd));
           const clicks = numberFrom(ad.clicks);
           const impressions = numberFrom(ad.impressions);
           const spend = numberFrom(ad.spend);
@@ -774,6 +777,7 @@
         return `<span class="keyword-chip ${tag.className}">${escapeHtml(tag.label)}</span>`;
       }).join("");
     };
+    const metric = (main, sub = "") => `<div class="ad-metric"><span class="ad-main">${escapeHtml(main)}</span>${sub ? `<span class="ad-sub">${escapeHtml(sub)}</span>` : ""}</div>`;
 
     const actionPanel = doc.createElement("section");
     actionPanel.className = "action-panel";
@@ -850,9 +854,9 @@
       const bidHtml = `<span class="bid-main">${escapeHtml(bid.main)}</span><span class="bid-range">${escapeHtml(bid.range || "无区间")}</span>`;
       const conversionHtml = `<span class="conversion-chip pending">${conversion.label}</span><span class="subtext">${escapeHtml(conversion.sub)}</span>`;
       const seasonHtml = `<span class="season-chip">${season.label}</span><span class="subtext">${escapeHtml(season.sub)}</span>`;
-      const adClickHtml = `<span class="ad-main">${ad.hasData ? compact(ad.clicks) : "-"}</span><span class="ad-sub">CTR ${ad.hasData ? pct(ad.ctr) : "-"}</span>`;
-      const adOrderHtml = `<span class="ad-main">${ad.hasData ? compact(ad.orders) : "-"}</span><span class="ad-sub">CVR ${ad.hasData ? pct(ad.cvr) : "-"}</span>`;
-      const adSalesHtml = `<span class="ad-main">${ad.hasData && ad.sales ? money(ad.sales) : "-"}</span><span class="ad-sub">ACOS ${ad.hasData ? pct(ad.acos) : "-"}</span>`;
+      const adClickHtml = metric(ad.hasData ? compact(ad.clicks) : "-", `CTR ${ad.hasData ? pct(ad.ctr) : "-"}`);
+      const adOrderHtml = metric(ad.hasData ? compact(ad.orders) : "-", `CVR ${ad.hasData ? pct(ad.cvr) : "-"}`);
+      const adSalesHtml = metric(ad.hasData && Number.isFinite(ad.sales) && ad.sales > 0 ? money(ad.sales) : "-", `ACOS ${ad.hasData ? pct(ad.acos) : "-"}`);
       row.innerHTML =
         `<td>${keywordHtml}</td>` +
         `<td><span class="market-main">${escapeHtml(asinTraffic || "-")}</span></td>` +
@@ -863,11 +867,11 @@
         `<td>${seasonHtml}</td>` +
         `<td>${competitorHtml}</td>` +
         `<td>${escapeHtml(selfRank)}</td>` +
-        `<td><span class="${ad.hasData && ad.impressions ? "ad-main" : "ad-empty"}">${ad.hasData && ad.impressions ? compact(ad.impressions) : "-"}</span></td>` +
+        `<td>${metric(ad.hasData && Number.isFinite(ad.impressions) && ad.impressions > 0 ? compact(ad.impressions) : "-")}</td>` +
         `<td>${adClickHtml}</td>` +
-        `<td><span class="ad-main">${ad.hasData && ad.cpc ? money(ad.cpc) : "-"}</span></td>` +
+        `<td>${metric(ad.hasData && Number.isFinite(ad.cpc) && ad.cpc > 0 ? money(ad.cpc) : "-")}</td>` +
         `<td>${adOrderHtml}</td>` +
-        `<td><span class="ad-main">${ad.hasData ? money(ad.spend) : "-"}</span></td>` +
+        `<td>${metric(ad.hasData && Number.isFinite(ad.spend) ? money(ad.spend) : "-")}</td>` +
         `<td>${adSalesHtml}</td>` +
         `<td>${adviceHtml}</td>`;
       const tag = row.cells[14] && row.cells[14].querySelector(".tag");
