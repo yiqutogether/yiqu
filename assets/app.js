@@ -533,31 +533,55 @@
       .cat-tail { color: #7a4cc2; background: #f4f0ff; }
       .cat-avoid { color: #667085; background: #f1f3f6; }
       .cat-missing { color: #475467; background: #eef2f6; }
-      .rule-note { color: #667085; font-size: 13px; line-height: 1.6; }
+      .rule-note { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 6px 16px; color: #667085; font-size: 13px; line-height: 1.6; padding: 12px 14px; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; }
+      .rule-note div { min-width: 0; }
       tr.is-hidden { display: none; }
       .table-wrap { border-radius: 8px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
-      table { min-width: 1740px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
-      th, td { font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
+      table { min-width: 2380px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
+      th, td { position: relative; font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
       th { color: #17324d !important; background: #eef4fb !important; }
+      th .resize-handle { position: absolute; top: 0; right: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 8; }
+      th .resize-handle:hover { background: rgba(47, 111, 206, .22); }
       tbody tr:nth-child(even) td { background: #fbfdff; }
       tbody tr:hover td { background: #f6fbff; }
       th:nth-child(1), td:nth-child(1) { width: 180px; position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
       thead th:nth-child(1) { z-index: 4; background: #e9f0f8 !important; }
-      th:nth-child(4), td:nth-child(4) { width: 170px !important; }
-      th:nth-child(8), td:nth-child(8) { width: 250px !important; }
-      th:nth-child(10), td:nth-child(10) { width: 270px !important; }
+      td:nth-child(6), td:nth-child(7), td:nth-child(15) { line-height: 1.45; }
       .group-row th { text-align: center !important; font-weight: 700; border-bottom: 1px solid #cad6e3 !important; }
       .group-market { background: #eaf7f2 !important; color: #006b55 !important; }
       .group-competition { background: #fff4e5 !important; color: #9a5a00 !important; }
       .group-self { background: #eef4ff !important; color: #2452b8 !important; }
       .group-ad { background: #f4f0ff !important; color: #6941c6 !important; }
-      .sparkline { width: 140px; height: 40px; display: block; }
+      .market-cell { display: grid; gap: 5px; }
+      .market-main { font-weight: 800; font-size: 15px; color: #172033; }
+      .market-sub, .subtext { color: #667085; font-size: 11px; line-height: 1.35; }
+      .sparkline { width: 150px; height: 42px; display: block; }
       .sparkline polyline { fill: none; stroke: #2f6fce; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .sparkline text { fill: #667085; font-size: 10px; }
+      .keyword-name { display: block; font-weight: 800; margin-bottom: 8px; }
+      .keyword-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+      .keyword-chip, .season-chip, .conversion-chip, .difficulty-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+      .keyword-chip { background: #eef5ff; color: #175cd3; }
+      .conversion-chip { background: #eaf7f1; color: #0f8f61; }
+      .season-chip { background: #fff7e5; color: #a15c00; }
+      .difficulty-pill.low { background: #eaf7f1; color: #0f8f61; }
+      .difficulty-pill.mid { background: #fff7e5; color: #a15c00; }
+      .difficulty-pill.high { background: #fff1f1; color: #dc2626; }
+      .bid-main { display: block; font-size: 15px; font-weight: 800; color: #172033; margin-bottom: 4px; }
+      .bid-range { display: block; color: #667085; font-size: 11px; }
+      .ad-main { display: block; font-size: 15px; font-weight: 800; color: #172033; }
+      .ad-sub { display: block; color: #667085; font-size: 11px; margin-top: 3px; }
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
-      .tag { border-radius: 999px !important; padding: 3px 8px !important; background: #e7f0ff !important; color: #175cd3 !important; }
+      .tag { border-radius: 999px !important; padding: 3px 8px !important; }
+      .tag.cat-guard { color: #1677ff !important; background: #edf5ff !important; }
+      .tag.cat-scale { color: #12a150 !important; background: #ebf8f0 !important; }
+      .tag.cat-review { color: #d99000 !important; background: #fff7e5 !important; }
+      .tag.cat-stop { color: #dc2626 !important; background: #fff1f1 !important; }
+      .tag.cat-tail { color: #7a4cc2 !important; background: #f4f0ff !important; }
+      .tag.cat-avoid { color: #667085 !important; background: #f1f3f6 !important; }
+      .tag.cat-missing { color: #475467 !important; background: #eef2f6 !important; }
     `;
     doc.head.appendChild(style);
 
@@ -654,43 +678,167 @@
     title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表</span>";
     metrics.after(title);
 
+    const money = (value) => {
+      if (!value) return "-";
+      return `$${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+    const pct = (value) => (value == null || !Number.isFinite(value)) ? "-" : `${value.toFixed(1)}%`;
+    const htmlOf = (node) => node ? node.innerHTML : "";
+    const parseAd = (raw) => {
+      if (!raw || /无投放/.test(raw)) return { hasData: false };
+      const parts = raw.split("/").map((part) => part.trim());
+      const clicks = numberFrom(parts[0]);
+      const spend = numberFrom(parts[1]);
+      const orders = numberFrom(parts[2]);
+      const acos = numberFrom(parts[3]);
+      const cpc = clicks ? spend / clicks : null;
+      const cvr = clicks ? orders / clicks * 100 : null;
+      const sales = acos ? spend / (acos / 100) : null;
+      return { hasData: true, clicks, spend, orders, acos, cpc, cvr, sales };
+    };
+    const parseBid = (raw) => {
+      const clean = String(raw || "").replace(/\s+/g, " ");
+      const recommend = clean.match(/建议\s*(\$?[0-9.]+)/);
+      const range = clean.replace(/，?\s*建议\s*\$?[0-9.]+/, "").trim();
+      return {
+        main: recommend ? (recommend[1].startsWith("$") ? recommend[1] : `$${recommend[1]}`) : clean || "-",
+        range: recommend ? range : ""
+      };
+    };
+    const difficultyMeta = (value) => {
+      if (value >= 85) return { label: "高", className: "high" };
+      if (value >= 60) return { label: "中", className: "mid" };
+      return { label: "低", className: "low" };
+    };
+    const seasonMeta = (parts) => {
+      const values = parts.map(trendValue).filter((n) => n > 0);
+      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 13周不足", className: "missing" };
+      const first = values[0];
+      const last = values[values.length - 1];
+      const avg = values.reduce((sum, n) => sum + n, 0) / values.length;
+      const range = Math.max(...values) - Math.min(...values);
+      const change = first ? (last - first) / first : 0;
+      if (change > 0.15) return { label: "近13周上行", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
+      if (change < -0.15) return { label: "近13周下行", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
+      if (avg && range / avg > 0.35) return { label: "波动明显", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
+      return { label: "相对平稳", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
+    };
+    const conversionMeta = (ad) => {
+      if (!ad.hasData) return { label: "无投放", sub: "广告报表未覆盖" };
+      if (ad.orders > 0) return { label: "已转化", sub: `CVR ${pct(ad.cvr)} · ACOS ${pct(ad.acos)}` };
+      if (ad.clicks > 0) return { label: "点击无单", sub: `${compact(ad.clicks)} 点击 · 待复查` };
+      return { label: "有展示待验证", sub: "暂无点击或订单" };
+    };
+    const keywordTags = (keyword, category, weekly, difficulty, ad) => {
+      const tags = [categoryMap[category].label];
+      if (weekly >= 100000) tags.push("高搜索");
+      else if (weekly >= 30000) tags.push("中高搜索");
+      else tags.push("长尾池");
+      if (difficulty >= 85) tags.push("竞争强");
+      if (ad.orders > 0) tags.push("已出单");
+      return tags.slice(0, 4).map((tag) => `<span class="keyword-chip">${escapeHtml(tag)}</span>`).join("");
+    };
+
     const actionPanel = doc.createElement("section");
     actionPanel.className = "action-panel";
     actionPanel.innerHTML = `
-      <div class="action-row">
-        <span class="action-title">颜色图例</span>
-        ${Object.entries(categoryMap).map(([key, item]) => `<span class="legend-pill ${item.className}"><span class="dot"></span>${item.label}</span>`).join("")}
-      </div>
       <div class="action-row" data-filter-row>
         <span class="action-title">筛选</span>
         <button class="filter-button is-active" type="button" data-filter="all">全部 ${counts.all}</button>
         ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
       </div>
-      <div class="rule-note">规则口径：守住放大 = 有订单且ACOS可接受，优先防守并放大；谨慎加码 = 有机会但竞争或成本偏硬，逐步加预算；降价复查 = 花费或点击偏高，先查图、Listing和CPC；暂停止损 = 低相关或高花费无单，优先暂停/否定；长尾测试 = 大词硬、长尾有机会，低价小预算试；暂不硬碰 = 头部垄断或自身位置弱，先观望；数据缺失 = 接口或报表证据不足。</div>
+      <div class="rule-note">
+        <div><strong>守住放大</strong>：有订单且 ACOS 可接受，优先防守并放大。</div>
+        <div><strong>谨慎加码</strong>：有机会但竞争或成本偏硬，逐步加预算。</div>
+        <div><strong>降价复查</strong>：花费或点击偏高，先查图、Listing 和 CPC。</div>
+        <div><strong>暂停止损</strong>：低相关或高花费无单，优先暂停/否定。</div>
+        <div><strong>长尾测试</strong>：大词硬、长尾有机会，低价小预算试。</div>
+        <div><strong>暂不硬碰</strong>：头部垄断或自身位置弱，先观望。</div>
+        <div><strong>数据缺失</strong>：接口或报表证据不足，先补数再判断。</div>
+      </div>
     `;
     title.after(actionPanel);
 
     const thead = table.querySelector("thead");
     if (thead) {
       thead.innerHTML =
-        `<tr class="group-row"><th rowspan="2">关键词</th><th class="group-market" colspan="5">市场</th><th class="group-self" colspan="1">自身</th><th class="group-competition" colspan="1">竞对</th><th class="group-ad" colspan="1">广告</th><th rowspan="2">打法建议</th></tr>` +
-        `<tr><th>ASIN总流量</th><th>周搜索量</th><th>ABA 13周</th><th>难度</th><th>建议竞价</th><th>自然位</th><th>点击前三/竞品</th><th>点击/花费/订单/ACOS</th></tr>`;
+        `<tr class="group-row"><th rowspan="2">关键词 / 标签</th><th class="group-market" colspan="5">市场</th><th class="group-competition" colspan="1">竞对</th><th class="group-self" colspan="1">自身</th><th class="group-ad" colspan="6">广告报表数据</th><th rowspan="2">打法建议</th></tr>` +
+        `<tr><th>月搜索量 + ABA周趋势</th><th>难度</th><th>建议竞价</th><th>转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
+    }
+    const oldColgroup = table.querySelector("colgroup");
+    if (oldColgroup) oldColgroup.remove();
+    const colgroup = doc.createElement("colgroup");
+    [190, 230, 110, 130, 150, 155, 270, 95, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
+      const col = doc.createElement("col");
+      col.style.width = `${width}px`;
+      colgroup.appendChild(col);
+    });
+    table.insertBefore(colgroup, table.firstChild);
+    if (thead) {
+      const firstRowSpans = thead.querySelectorAll("tr:first-child th[rowspan]");
+      if (firstRowSpans[0]) firstRowSpans[0].dataset.colIndex = "0";
+      if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "14";
+      thead.querySelectorAll("tr:last-child th").forEach((th, index) => {
+        th.dataset.colIndex = String(index + 1);
+      });
+      thead.querySelectorAll("th[data-col-index]").forEach((th) => {
+        th.insertAdjacentHTML("beforeend", '<span class="resize-handle" aria-hidden="true"></span>');
+      });
     }
 
     rows.forEach((row) => {
-      const trendCell = row.cells && row.cells[3];
-      if (trendCell) {
-        const parts = parseTrend(trendCell.textContent);
-        if (parts.length > 1) {
-          trendCell.textContent = "";
-          trendCell.appendChild(sparkline(parts));
-        }
-      }
+      const original = Array.from(row.cells);
+      const keyword = text(original[0]);
+      const asinTraffic = text(original[1]);
+      const weekly = numberFrom(text(original[2]));
+      const trendParts = parseTrend(text(original[3]));
+      const difficulty = numberFrom(text(original[4]));
+      const diff = difficultyMeta(difficulty);
+      const bid = parseBid(text(original[5]));
+      const selfRank = text(original[6]) || "-";
+      const competitorHtml = htmlOf(original[7]) || "-";
+      const ad = parseAd(text(original[8]));
+      const adviceHtml = htmlOf(original[9]);
+      const category = row.dataset.category || classifyRow(row);
+      const season = seasonMeta(trendParts);
+      const conversion = conversionMeta(ad);
+      const trendWrap = doc.createElement("div");
+      if (trendParts.length > 1) trendWrap.appendChild(sparkline(trendParts));
+      else trendWrap.textContent = "-";
+      const trendHtml = trendWrap.innerHTML || trendWrap.textContent;
+      const keywordHtml = `<span class="keyword-name">${escapeHtml(keyword)}</span><span class="keyword-tags">${keywordTags(keyword, category, weekly, difficulty, ad)}</span>`;
+      const searchHtml = `<div class="market-cell"><span class="market-main">${compact(weekly)}</span><span class="market-sub">ASIN总流量 ${escapeHtml(asinTraffic || "-")}</span>${trendHtml}</div>`;
+      const difficultyHtml = `<span class="difficulty-pill ${diff.className}">${difficulty || "-"} · ${diff.label}</span>`;
+      const bidHtml = `<span class="bid-main">${escapeHtml(bid.main)}</span><span class="bid-range">${escapeHtml(bid.range || "无区间")}</span>`;
+      const conversionHtml = `<span class="conversion-chip">${conversion.label}</span><span class="subtext">${escapeHtml(conversion.sub)}</span>`;
+      const seasonHtml = `<span class="season-chip">${season.label}</span><span class="subtext">${escapeHtml(season.sub)}</span>`;
+      const adClickHtml = `<span class="ad-main">${ad.hasData ? compact(ad.clicks) : "-"}</span><span class="ad-sub">CTR -</span>`;
+      const adOrderHtml = `<span class="ad-main">${ad.hasData ? compact(ad.orders) : "-"}</span><span class="ad-sub">CVR ${ad.hasData ? pct(ad.cvr) : "-"}</span>`;
+      const adSalesHtml = `<span class="ad-main">${ad.hasData && ad.sales ? money(ad.sales) : "-"}</span><span class="ad-sub">ACOS ${ad.hasData ? pct(ad.acos) : "-"}</span>`;
+      row.innerHTML =
+        `<td>${keywordHtml}</td>` +
+        `<td>${searchHtml}</td>` +
+        `<td>${difficultyHtml}</td>` +
+        `<td>${bidHtml}</td>` +
+        `<td>${conversionHtml}</td>` +
+        `<td>${seasonHtml}</td>` +
+        `<td>${competitorHtml}</td>` +
+        `<td>${escapeHtml(selfRank)}</td>` +
+        `<td><span class="ad-main">-</span></td>` +
+        `<td>${adClickHtml}</td>` +
+        `<td><span class="ad-main">${ad.hasData && ad.cpc ? money(ad.cpc) : "-"}</span></td>` +
+        `<td>${adOrderHtml}</td>` +
+        `<td><span class="ad-main">${ad.hasData ? money(ad.spend) : "-"}</span></td>` +
+        `<td>${adSalesHtml}</td>` +
+        `<td>${adviceHtml}</td>`;
+      const tag = row.cells[14] && row.cells[14].querySelector(".tag");
+      if (tag) tag.classList.add(categoryMap[category].className);
     });
 
     doc.querySelectorAll(".asin").forEach((node) => {
-      const img = node.querySelector("img");
-      const label = text(node).slice(0, 4) || "ASIN";
+      let img = node.querySelector("img");
+      const asin = (text(node).match(/B0[A-Z0-9]{8}/) || [])[0];
+      const label = asin ? asin.slice(0, 4) : (text(node).slice(0, 4) || "ASIN");
       const fallback = () => {
         const span = doc.createElement("span");
         span.className = "image-fallback";
@@ -699,8 +847,14 @@
         else node.insertBefore(span, node.firstChild);
       };
       if (!img || !img.getAttribute("src")) {
-        fallback();
-        return;
+        if (asin) {
+          img = doc.createElement("img");
+          img.src = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SS40_.jpg`;
+          node.insertBefore(img, node.firstChild);
+        } else {
+          fallback();
+          return;
+        }
       }
       if (img.getAttribute("src").startsWith("http://")) {
         img.setAttribute("src", img.getAttribute("src").replace(/^http:\/\//, "https://"));
@@ -720,6 +874,31 @@
           document.querySelectorAll('tbody tr').forEach(function (row) {
             row.classList.toggle('is-hidden', value !== 'all' && row.dataset.category !== value);
           });
+        });
+      });
+      document.querySelectorAll('th[data-col-index] .resize-handle').forEach(function (handle) {
+        handle.addEventListener('mousedown', function (event) {
+          event.preventDefault();
+          var th = handle.parentElement;
+          var index = Number(th.getAttribute('data-col-index'));
+          var col = document.querySelectorAll('colgroup col')[index];
+          if (!col) return;
+          var startX = event.clientX;
+          var startWidth = parseInt(col.style.width, 10) || th.offsetWidth;
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          function move(moveEvent) {
+            var next = Math.max(72, startWidth + moveEvent.clientX - startX);
+            col.style.width = next + 'px';
+          }
+          function up() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          }
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', up);
         });
       });
     `;
