@@ -302,7 +302,7 @@
       });
       if (!response.ok) throw new Error(`报告文件读取失败，OSS 返回 HTTP ${response.status}。报告地址：${reportUrl}`);
       const html = await response.text();
-      frame.srcdoc = html;
+      frame.srcdoc = polishReportHtml(html);
       frame.style.display = "block";
       setMessage(message, "");
     } catch (error) {
@@ -324,6 +324,74 @@
       /^http:\/\/yiqutogether-tools\.oss-cn-guangzhou\.aliyuncs\.com/i,
       "https://yiqutogether-tools.oss-cn-guangzhou.aliyuncs.com"
     );
+  }
+
+  function polishReportHtml(html) {
+    const style = `
+      <style>
+        table { min-width: 1680px !important; table-layout: fixed !important; }
+        th:nth-child(4), td:nth-child(4) { width: 250px !important; }
+        th:nth-child(8), td:nth-child(8) { width: 230px !important; }
+        .trend-list { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; line-height: 1.4; }
+        .trend-point { display: inline-flex; align-items: center; min-width: 38px; color: #344054; }
+        .trend-arrow { color: #98a2b3; }
+        .asin { display: grid !important; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: center; }
+        .asin img, .image-fallback { width: 34px; height: 34px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 3px; }
+        .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 11px; font-weight: 700; }
+      </style>
+    `;
+    const script = `
+      <script>
+        (function () {
+          document.querySelectorAll("tbody tr").forEach(function (row) {
+            var trendCell = row.cells && row.cells[3];
+            if (trendCell && !trendCell.querySelector(".trend-list")) {
+              var parts = trendCell.textContent.split(/\\s*→\\s*/).map(function (item) { return item.trim(); }).filter(Boolean);
+              if (parts.length > 1) {
+                trendCell.textContent = "";
+                var wrap = document.createElement("div");
+                wrap.className = "trend-list";
+                parts.forEach(function (part, index) {
+                  if (index > 0) {
+                    var arrow = document.createElement("span");
+                    arrow.className = "trend-arrow";
+                    arrow.innerHTML = "&rarr;";
+                    wrap.appendChild(arrow);
+                  }
+                  var point = document.createElement("span");
+                  point.className = "trend-point";
+                  point.textContent = part;
+                  wrap.appendChild(point);
+                });
+                trendCell.appendChild(wrap);
+              }
+            }
+          });
+
+          document.querySelectorAll(".asin").forEach(function (node) {
+            var img = node.querySelector("img");
+            var text = (node.textContent || "ASIN").trim().slice(0, 4);
+            function fallback() {
+              var span = document.createElement("span");
+              span.className = "image-fallback";
+              span.textContent = text || "ASIN";
+              if (img && img.parentNode) img.replaceWith(span);
+            }
+            if (!img || !img.getAttribute("src")) {
+              fallback();
+              return;
+            }
+            if (img.getAttribute("src").indexOf("http://") === 0) {
+              img.setAttribute("src", img.getAttribute("src").replace(/^http:\\/\\//, "https://"));
+            }
+            img.referrerPolicy = "no-referrer";
+            img.loading = "lazy";
+            img.onerror = fallback;
+          });
+        })();
+      <\\/script>
+    `;
+    return html.replace("</head>", `${style}</head>`).replace("</body>", `${script}</body>`);
   }
 
   window.YiquApp = {
