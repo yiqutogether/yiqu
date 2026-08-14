@@ -537,7 +537,7 @@
       .rule-note div { min-width: 0; }
       tr.is-hidden { display: none; }
       .table-wrap { border-radius: 8px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
-      table { min-width: 2380px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
+      table { min-width: 2520px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
       th, td { position: relative; font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
       th { color: #17324d !important; background: #eef4fb !important; }
       th .resize-handle { position: absolute; top: 0; right: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 8; }
@@ -555,14 +555,22 @@
       .market-cell { display: grid; gap: 5px; }
       .market-main { font-weight: 800; font-size: 15px; color: #172033; }
       .market-sub, .subtext { color: #667085; font-size: 11px; line-height: 1.35; }
-      .sparkline { width: 150px; height: 42px; display: block; }
-      .sparkline polyline { fill: none; stroke: #2f6fce; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .sparkline text { fill: #667085; font-size: 10px; }
+      .trend-bars { display: flex; align-items: flex-end; gap: 2px; width: 160px; height: 42px; margin-top: 5px; }
+      .trend-bar { flex: 1 1 0; min-width: 3px; border-radius: 2px 2px 0 0; background: #39a892; }
+      .trend-meta { color: #667085; font-size: 10px; line-height: 1.25; margin-top: 3px; }
       .keyword-name { display: block; font-weight: 800; margin-bottom: 8px; }
       .keyword-tags { display: flex; flex-wrap: wrap; gap: 5px; }
       .keyword-chip, .season-chip, .conversion-chip, .difficulty-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
       .keyword-chip { background: #eef5ff; color: #175cd3; }
+      .keyword-chip.cat-guard { color: #1677ff; background: #edf5ff; }
+      .keyword-chip.cat-scale { color: #12a150; background: #ebf8f0; }
+      .keyword-chip.cat-review { color: #d99000; background: #fff7e5; }
+      .keyword-chip.cat-stop { color: #dc2626; background: #fff1f1; }
+      .keyword-chip.cat-tail { color: #7a4cc2; background: #f4f0ff; }
+      .keyword-chip.cat-avoid { color: #667085; background: #f1f3f6; }
+      .keyword-chip.cat-missing { color: #475467; background: #eef2f6; }
       .conversion-chip { background: #eaf7f1; color: #0f8f61; }
+      .conversion-chip.pending { background: #eef2f6; color: #475467; }
       .season-chip { background: #fff7e5; color: #a15c00; }
       .difficulty-pill.low { background: #eaf7f1; color: #0f8f61; }
       .difficulty-pill.mid { background: #fff7e5; color: #a15c00; }
@@ -571,6 +579,7 @@
       .bid-range { display: block; color: #667085; font-size: 11px; }
       .ad-main { display: block; font-size: 15px; font-weight: 800; color: #172033; }
       .ad-sub { display: block; color: #667085; font-size: 11px; margin-top: 3px; }
+      .ad-empty { color: #98a2b3; font-weight: 700; }
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
@@ -603,20 +612,16 @@
       if (unit === "k") n *= 1000;
       return n;
     };
-    const sparkline = (parts) => {
+    const trendBars = (parts) => {
       const values = parts.map(trendValue).filter((n) => n > 0);
       if (values.length < 2) return doc.createTextNode(parts.join(" -> "));
-      const min = Math.min(...values);
       const max = Math.max(...values);
-      const spread = max - min || 1;
-      const points = values.map((value, index) => {
-        const x = 4 + index * (132 / Math.max(1, values.length - 1));
-        const y = 32 - ((value - min) / spread) * 24;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(" ");
       const wrap = doc.createElement("div");
-      wrap.innerHTML = `<svg class="sparkline" viewBox="0 0 144 44" role="img" aria-label="ABA trend"><polyline points="${points}"></polyline><text x="4" y="42">${escapeHtml(parts[0])}</text><text x="104" y="42">${escapeHtml(parts[parts.length - 1])}</text></svg>`;
-      return wrap.firstElementChild;
+      wrap.innerHTML = `<div class="trend-bars" role="img" aria-label="ABA 13周趋势">${values.map((value) => {
+        const height = Math.max(6, Math.round((value / (max || 1)) * 38));
+        return `<span class="trend-bar" style="height:${height}px"></span>`;
+      }).join("")}</div><div class="trend-meta">${escapeHtml(parts[0])} -> ${escapeHtml(parts[parts.length - 1])}</div>`;
+      return wrap;
     };
 
     const oldTitle = oldHeader ? text(oldHeader.querySelector("h1")) : "关键词作战总表";
@@ -684,7 +689,23 @@
     };
     const pct = (value) => (value == null || !Number.isFinite(value)) ? "-" : `${value.toFixed(1)}%`;
     const htmlOf = (node) => node ? node.innerHTML : "";
-    const parseAd = (raw) => {
+    const parseAd = (input) => {
+      if (input && input.dataset && input.dataset.ad) {
+        try {
+          const ad = JSON.parse(input.dataset.ad);
+          const clicks = numberFrom(ad.clicks);
+          const impressions = numberFrom(ad.impressions);
+          const spend = numberFrom(ad.spend);
+          const orders = numberFrom(ad.orders);
+          const sales = numberFrom(ad.sales);
+          const ctr = impressions ? clicks / impressions * 100 : null;
+          const cpc = clicks ? spend / clicks : null;
+          const cvr = clicks ? orders / clicks * 100 : null;
+          const acos = sales ? spend / sales * 100 : (ad.acos != null ? Number(ad.acos) * (Number(ad.acos) <= 1 ? 100 : 1) : null);
+          return { hasData: true, impressions, clicks, spend, orders, sales, ctr, cpc, cvr, acos };
+        } catch (_) {}
+      }
+      const raw = typeof input === "string" ? input : text(input);
       if (!raw || /无投放/.test(raw)) return { hasData: false };
       const parts = raw.split("/").map((part) => part.trim());
       const clicks = numberFrom(parts[0]);
@@ -712,31 +733,38 @@
     };
     const seasonMeta = (parts) => {
       const values = parts.map(trendValue).filter((n) => n > 0);
-      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 13周不足", className: "missing" };
+      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 13周不足" };
       const first = values[0];
       const last = values[values.length - 1];
       const avg = values.reduce((sum, n) => sum + n, 0) / values.length;
       const range = Math.max(...values) - Math.min(...values);
       const change = first ? (last - first) / first : 0;
-      if (change > 0.15) return { label: "近13周上行", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
-      if (change < -0.15) return { label: "近13周下行", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
-      if (avg && range / avg > 0.35) return { label: "波动明显", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
-      return { label: "相对平稳", sub: `${parts[0]} -> ${parts[parts.length - 1]}` };
+      if (change > 0.15) return { label: "近期旺季抬升", sub: "按 ABA 13周趋势判断" };
+      if (change < -0.15) return { label: "近期淡季回落", sub: "按 ABA 13周趋势判断" };
+      if (avg && range / avg > 0.35) return { label: "季节波动明显", sub: "按 ABA 13周趋势判断" };
+      return { label: "需求相对平稳", sub: "按 ABA 13周趋势判断" };
     };
-    const conversionMeta = (ad) => {
-      if (!ad.hasData) return { label: "无投放", sub: "广告报表未覆盖" };
-      if (ad.orders > 0) return { label: "已转化", sub: `CVR ${pct(ad.cvr)} · ACOS ${pct(ad.acos)}` };
-      if (ad.clicks > 0) return { label: "点击无单", sub: `${compact(ad.clicks)} 点击 · 待复查` };
-      return { label: "有展示待验证", sub: "暂无点击或订单" };
+    const marketConversionMeta = (sourceCell) => {
+      if (sourceCell && sourceCell.dataset && sourceCell.dataset.marketConversion) {
+        try {
+          const data = JSON.parse(sourceCell.dataset.marketConversion);
+          const rate = Number(data.clickConversionRate);
+          if (Number.isFinite(rate)) return { label: `市场CVR ${pct(rate <= 1 ? rate * 100 : rate)}`, sub: "西柚关键词市场数据" };
+        } catch (_) {}
+      }
+      return { label: "待接入", sub: "需要西柚市场转化字段" };
     };
     const keywordTags = (keyword, category, weekly, difficulty, ad) => {
-      const tags = [categoryMap[category].label];
+      const tags = [{ label: categoryMap[category].label, className: categoryMap[category].className }];
       if (weekly >= 100000) tags.push("高搜索");
       else if (weekly >= 30000) tags.push("中高搜索");
       else tags.push("长尾池");
       if (difficulty >= 85) tags.push("竞争强");
       if (ad.orders > 0) tags.push("已出单");
-      return tags.slice(0, 4).map((tag) => `<span class="keyword-chip">${escapeHtml(tag)}</span>`).join("");
+      return tags.slice(0, 4).map((tag) => {
+        if (typeof tag === "string") return `<span class="keyword-chip">${escapeHtml(tag)}</span>`;
+        return `<span class="keyword-chip ${tag.className}">${escapeHtml(tag.label)}</span>`;
+      }).join("");
     };
 
     const actionPanel = doc.createElement("section");
@@ -762,13 +790,13 @@
     const thead = table.querySelector("thead");
     if (thead) {
       thead.innerHTML =
-        `<tr class="group-row"><th rowspan="2">关键词 / 标签</th><th class="group-market" colspan="5">市场</th><th class="group-competition" colspan="1">竞对</th><th class="group-self" colspan="1">自身</th><th class="group-ad" colspan="6">广告报表数据</th><th rowspan="2">打法建议</th></tr>` +
-        `<tr><th>月搜索量 + ABA周趋势</th><th>难度</th><th>建议竞价</th><th>转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
+        `<tr class="group-row"><th rowspan="2">关键词 / 标签</th><th rowspan="2">ASIN总流量</th><th class="group-market" colspan="5">市场</th><th class="group-competition" colspan="1">竞对</th><th class="group-self" colspan="1">自身</th><th class="group-ad" colspan="6">广告报表数据</th><th rowspan="2">打法建议</th></tr>` +
+        `<tr><th>搜索量 + ABA趋势</th><th>难度</th><th>建议竞价</th><th>市场转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
     }
     const oldColgroup = table.querySelector("colgroup");
     if (oldColgroup) oldColgroup.remove();
     const colgroup = doc.createElement("colgroup");
-    [190, 230, 110, 130, 150, 155, 270, 95, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
+    [190, 130, 240, 110, 130, 150, 155, 270, 95, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
       const col = doc.createElement("col");
       col.style.width = `${width}px`;
       colgroup.appendChild(col);
@@ -777,9 +805,10 @@
     if (thead) {
       const firstRowSpans = thead.querySelectorAll("tr:first-child th[rowspan]");
       if (firstRowSpans[0]) firstRowSpans[0].dataset.colIndex = "0";
-      if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "14";
+      if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "1";
+      if (firstRowSpans[2]) firstRowSpans[2].dataset.colIndex = "15";
       thead.querySelectorAll("tr:last-child th").forEach((th, index) => {
-        th.dataset.colIndex = String(index + 1);
+        th.dataset.colIndex = String(index + 2);
       });
       thead.querySelectorAll("th[data-col-index]").forEach((th) => {
         th.insertAdjacentHTML("beforeend", '<span class="resize-handle" aria-hidden="true"></span>');
@@ -797,26 +826,27 @@
       const bid = parseBid(text(original[5]));
       const selfRank = text(original[6]) || "-";
       const competitorHtml = htmlOf(original[7]) || "-";
-      const ad = parseAd(text(original[8]));
+      const ad = parseAd(original[8]);
       const adviceHtml = htmlOf(original[9]);
       const category = row.dataset.category || classifyRow(row);
       const season = seasonMeta(trendParts);
-      const conversion = conversionMeta(ad);
+      const conversion = marketConversionMeta(original[2]);
       const trendWrap = doc.createElement("div");
-      if (trendParts.length > 1) trendWrap.appendChild(sparkline(trendParts));
+      if (trendParts.length > 1) trendWrap.appendChild(trendBars(trendParts));
       else trendWrap.textContent = "-";
       const trendHtml = trendWrap.innerHTML || trendWrap.textContent;
       const keywordHtml = `<span class="keyword-name">${escapeHtml(keyword)}</span><span class="keyword-tags">${keywordTags(keyword, category, weekly, difficulty, ad)}</span>`;
-      const searchHtml = `<div class="market-cell"><span class="market-main">${compact(weekly)}</span><span class="market-sub">ASIN总流量 ${escapeHtml(asinTraffic || "-")}</span>${trendHtml}</div>`;
+      const searchHtml = `<div class="market-cell"><span class="market-main">${compact(weekly)}</span>${trendHtml}</div>`;
       const difficultyHtml = `<span class="difficulty-pill ${diff.className}">${difficulty || "-"} · ${diff.label}</span>`;
       const bidHtml = `<span class="bid-main">${escapeHtml(bid.main)}</span><span class="bid-range">${escapeHtml(bid.range || "无区间")}</span>`;
-      const conversionHtml = `<span class="conversion-chip">${conversion.label}</span><span class="subtext">${escapeHtml(conversion.sub)}</span>`;
+      const conversionHtml = `<span class="conversion-chip pending">${conversion.label}</span><span class="subtext">${escapeHtml(conversion.sub)}</span>`;
       const seasonHtml = `<span class="season-chip">${season.label}</span><span class="subtext">${escapeHtml(season.sub)}</span>`;
-      const adClickHtml = `<span class="ad-main">${ad.hasData ? compact(ad.clicks) : "-"}</span><span class="ad-sub">CTR -</span>`;
+      const adClickHtml = `<span class="ad-main">${ad.hasData ? compact(ad.clicks) : "-"}</span><span class="ad-sub">CTR ${ad.hasData ? pct(ad.ctr) : "-"}</span>`;
       const adOrderHtml = `<span class="ad-main">${ad.hasData ? compact(ad.orders) : "-"}</span><span class="ad-sub">CVR ${ad.hasData ? pct(ad.cvr) : "-"}</span>`;
       const adSalesHtml = `<span class="ad-main">${ad.hasData && ad.sales ? money(ad.sales) : "-"}</span><span class="ad-sub">ACOS ${ad.hasData ? pct(ad.acos) : "-"}</span>`;
       row.innerHTML =
         `<td>${keywordHtml}</td>` +
+        `<td><span class="market-main">${escapeHtml(asinTraffic || "-")}</span></td>` +
         `<td>${searchHtml}</td>` +
         `<td>${difficultyHtml}</td>` +
         `<td>${bidHtml}</td>` +
@@ -824,7 +854,7 @@
         `<td>${seasonHtml}</td>` +
         `<td>${competitorHtml}</td>` +
         `<td>${escapeHtml(selfRank)}</td>` +
-        `<td><span class="ad-main">-</span></td>` +
+        `<td><span class="${ad.hasData && ad.impressions ? "ad-main" : "ad-empty"}">${ad.hasData && ad.impressions ? compact(ad.impressions) : "-"}</span></td>` +
         `<td>${adClickHtml}</td>` +
         `<td><span class="ad-main">${ad.hasData && ad.cpc ? money(ad.cpc) : "-"}</span></td>` +
         `<td>${adOrderHtml}</td>` +
@@ -849,7 +879,7 @@
       if (!img || !img.getAttribute("src")) {
         if (asin) {
           img = doc.createElement("img");
-          img.src = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SS40_.jpg`;
+          img.src = `https://m.media-amazon.com/images/P/${asin}.01._AC_US40_.jpg`;
           node.insertBefore(img, node.firstChild);
         } else {
           fallback();
