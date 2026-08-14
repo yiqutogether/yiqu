@@ -542,7 +542,7 @@
       th { color: #17324d !important; background: #eef4fb !important; }
       .th-label { display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 12px); white-space: normal; line-height: 1.25; vertical-align: middle; }
       .th-help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9fb7d8; border-radius: 999px; color: #2f6fce; background: #fff; font-size: 10px; font-weight: 800; cursor: help; }
-      .th-help::after { content: attr(data-tip); position: fixed; left: var(--tip-x, 0); top: var(--tip-y, 0); z-index: 99999; display: none; width: max-content; max-width: 330px; padding: 9px 10px; border-radius: 6px; background: rgba(23, 32, 51, .96); color: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, .22); font-size: 12px; line-height: 1.45; font-weight: 500; text-align: left; white-space: normal; pointer-events: none; }
+      .th-help::after { content: attr(data-tip); position: fixed; left: var(--tip-x, -9999px); top: var(--tip-y, -9999px); z-index: 99999; display: none; width: max-content; max-width: 330px; padding: 9px 10px; border-radius: 6px; background: rgba(23, 32, 51, .96); color: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, .22); font-size: 12px; line-height: 1.45; font-weight: 500; text-align: left; white-space: normal; pointer-events: none; }
       .th-help:hover::after { display: block; }
       th[data-col-index] { user-select: none; }
       th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 8; }
@@ -896,7 +896,7 @@
 
     const thead = table.querySelector("thead");
     if (thead) {
-      const h = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" data-tip="${escapeHtml(tip)}" title="${escapeHtml(tip)}">?</span></span>`;
+      const h = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" data-tip="${escapeHtml(tip)}">?</span></span>`;
       thead.innerHTML =
         `<tr class="group-row">` +
         `<th rowspan="2">${h("关键词 / 标签", "关键词来自西柚按目标 ASIN 反查出的相关词；标签由前台根据打法建议、搜索量、难度和广告表现补充，用于运营扫表。")}</th>` +
@@ -945,10 +945,12 @@
         th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
       });
       thead.querySelectorAll(".th-help").forEach((help) => {
-        help.addEventListener("mousemove", (event) => {
+        const positionTip = (event) => {
           help.style.setProperty("--tip-x", `${Math.min(event.clientX + 12, window.innerWidth - 360)}px`);
           help.style.setProperty("--tip-y", `${Math.min(event.clientY + 14, window.innerHeight - 130)}px`);
-        });
+        };
+        help.addEventListener("mouseenter", positionTip);
+        help.addEventListener("mousemove", positionTip);
       });
     }
 
