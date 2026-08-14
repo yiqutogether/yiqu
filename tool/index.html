@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>关键词作战台</title>
-    <link rel="stylesheet" href="../assets/styles.css?v=20260815-combo-fields">
+    <link rel="stylesheet" href="../assets/styles.css?v=20260815-clear-conflicts">
   </head>
   <body class="app-page">
     <header class="topbar">
@@ -78,7 +78,8 @@
           <div class="usage-note">
             <strong>使用规则</strong>
             <p>每个字段都可输入搜索，也可点候选选择。可直接从 SPU、SKU 或 ASIN 开始；系统会自动补齐能唯一确定的字段。</p>
-            <p>红框表示当前匹配到多个可能值，需要继续选择。提交前必须确定站点、店铺、ASIN，并上传对应广告报表。</p>
+            <p>换产品时直接在任意字段输入新内容即可，系统会自动清掉冲突的旧条件。红框表示当前匹配到多个可能值，需要继续选择。</p>
+            <button id="clear-product-fields" class="mini-button" type="button">清空重选</button>
           </div>
           <button id="submit-task" class="primary-button" type="submit">提交分析</button>
           <p id="task-message" class="form-message" role="status"></p>
@@ -97,7 +98,7 @@
       </section>
     </main>
 
-    <script src="../assets/app.js?v=20260815-combo-fields"></script>
+    <script src="../assets/app.js?v=20260815-clear-conflicts"></script>
     <script>
       window.YiquApp.initToolPage();
     </script>

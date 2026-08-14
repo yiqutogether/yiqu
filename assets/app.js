@@ -3,7 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
-    productMapUrl: "../assets/product-map.json?v=20260815-combo-fields",
+    productMapUrl: "../assets/product-map.json?v=20260815-clear-conflicts",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -270,6 +270,30 @@
       return candidates[0] || null;
     }
 
+    function clearConflictingFields(anchorField) {
+      if (!anchorField) return;
+      const anchorValue = selectValue(anchorField.node);
+      if (!anchorValue) return;
+      const anchorRows = rows.filter((row) => productFieldSearch(row, anchorField, anchorValue));
+      if (!anchorRows.length) return;
+
+      selectors.forEach((field) => {
+        if (field.id === anchorField.id) return;
+        const value = selectValue(field.node);
+        if (!value) return;
+        const valueExists = hasExactProductValue(rows, field, value);
+        if (!valueExists) return;
+        const stillCompatible = anchorRows.some((row) => productFieldExact(row, field, value));
+        if (!stillCompatible) {
+          field.node.value = "";
+          if (field.hint) {
+            field.hint.textContent = "已清掉和新输入冲突的旧条件。";
+            field.hint.classList.remove("is-warning");
+          }
+        }
+      });
+    }
+
     function autoFillUniqueFields(anchorField) {
       if (!anchorField || !hasExactProductValue(rows, anchorField, selectValue(anchorField.node))) return;
       let candidates = candidateRows().filter((row) => productFieldExact(row, anchorField, selectValue(anchorField.node)));
@@ -327,6 +351,7 @@
 
     function refresh(anchorField) {
       if (anchorField && anchorField.id === "asin") anchorField.node.value = selectValue(anchorField.node).toUpperCase();
+      clearConflictingFields(anchorField);
       autoFillUniqueFields(anchorField);
       const candidates = candidateRows();
       selectors.forEach((field, index) => {
@@ -343,6 +368,21 @@
       field.node.addEventListener("input", () => refresh(field));
       field.node.addEventListener("change", () => refresh(field));
     });
+
+    const clearButton = $("#clear-product-fields");
+    if (clearButton) {
+      clearButton.addEventListener("click", () => {
+        selectors.forEach((field) => {
+          field.node.value = "";
+          field.node.classList.remove("needs-choice", "is-confirmed");
+          if (field.hint) {
+            field.hint.textContent = "";
+            field.hint.classList.remove("is-warning");
+          }
+        });
+        refresh(null);
+      });
+    }
 
     refresh(null);
 

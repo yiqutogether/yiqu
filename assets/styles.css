@@ -193,7 +193,8 @@ select.is-confirmed {
 }
 
 .primary-button,
-.ghost-button {
+.ghost-button,
+.mini-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -224,6 +225,17 @@ select.is-confirmed {
   border: 1px solid var(--line-strong);
   background: #fff;
   color: #344054;
+}
+
+.mini-button {
+  width: 100%;
+  min-height: 30px;
+  margin-top: 8px;
+  border: 1px solid #b8c8dd;
+  background: #fff;
+  color: #17324d;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .form-message {
