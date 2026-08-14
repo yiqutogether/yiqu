@@ -879,13 +879,13 @@
         ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
       </div>
       <div class="rule-note">
-        <div><strong>守住放大</strong>：有订单且 ACOS 可接受，优先防守并放大。</div>
-        <div><strong>谨慎加码</strong>：有机会但竞争或成本偏硬，逐步加预算。</div>
-        <div><strong>降价复查</strong>：花费或点击偏高，先查图、Listing 和 CPC。</div>
-        <div><strong>暂停止损</strong>：低相关或高花费无单，优先暂停/否定。</div>
-        <div><strong>长尾测试</strong>：大词硬、长尾有机会，低价小预算试。</div>
-        <div><strong>暂不硬碰</strong>：头部垄断或自身位置弱，先观望。</div>
-        <div><strong>数据缺失</strong>：接口或报表证据不足，先补数再判断。</div>
+        <div><strong>守住放大</strong>：有订单且 ACOS ≤ 30%，自然位或广告位表现不差，优先防守并放大。</div>
+        <div><strong>谨慎加码</strong>：有订单但 30% &lt; ACOS ≤ 45%，或竞争强但仍有转化，逐步加预算。</div>
+        <div><strong>降价复查</strong>：点击多、有花费，且 ACOS &gt; 45% 或转化偏低，先降 CPC、查主图、Listing 和价格。</div>
+        <div><strong>暂停止损</strong>：点击 ≥ 20 且 0 单，或花费明显超过可接受获客成本仍无单，优先暂停/否定。</div>
+        <div><strong>长尾测试</strong>：搜索量中低、竞争不强、相关性高、无明显历史投放，低价小预算测试。</div>
+        <div><strong>暂不硬碰</strong>：周搜索量高但难度 ≥ 85，且点击前三垄断或自己自然位弱，先观望或拆长尾。</div>
+        <div><strong>数据缺失</strong>：西柚或广告报表关键字段缺失，不做强判断，先补数再判断。</div>
       </div>
     `;
     title.after(actionPanel);
