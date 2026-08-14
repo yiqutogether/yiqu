@@ -163,6 +163,35 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.12);
 }
 
+input.needs-choice,
+select.needs-choice {
+  border-color: var(--bad);
+  background: #fffafa;
+}
+
+input.needs-choice:focus,
+select.needs-choice:focus {
+  border-color: var(--bad);
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
+}
+
+input.is-confirmed,
+select.is-confirmed {
+  border-color: #9fd7bd;
+}
+
+.field-hint {
+  min-height: 15px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.field-hint.is-warning {
+  color: var(--bad);
+}
+
 .primary-button,
 .ghost-button {
   display: inline-flex;
@@ -281,6 +310,26 @@ select:focus {
   display: block;
   margin-bottom: 3px;
   color: var(--text);
+}
+
+.usage-note {
+  padding: 10px 11px;
+  border: 1px solid #d9e7f7;
+  border-radius: 6px;
+  background: #f3f8ff;
+  color: #425466;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.usage-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #17324d;
+}
+
+.usage-note p {
+  margin: 4px 0 0;
 }
 
 .task-section {

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>关键词作战台</title>
-    <link rel="stylesheet" href="../assets/styles.css?v=20260815-product-map">
+    <link rel="stylesheet" href="../assets/styles.css?v=20260815-combo-fields">
   </head>
   <body class="app-page">
     <header class="topbar">
@@ -20,53 +20,53 @@
         <form id="task-form" class="form-stack">
           <label>
             站点
-            <select id="site" name="site" required>
-              <option value="">正在加载产品映射...</option>
-            </select>
+            <input id="site" name="site" list="site-options" autocomplete="off" placeholder="US / 美国" required>
+            <datalist id="site-options"></datalist>
+            <span class="field-hint" data-hint-for="site">正在加载产品映射...</span>
           </label>
           <label>
             店铺
-            <select id="store" name="store" disabled>
-              <option value="">先选择站点</option>
-            </select>
+            <input id="store" name="store" list="store-options" autocomplete="off" placeholder="输入或选择店铺">
+            <datalist id="store-options"></datalist>
+            <span class="field-hint" data-hint-for="store"></span>
           </label>
           <label>
             一级分类
-            <select id="category1" name="category1" disabled>
-              <option value="">先选择店铺</option>
-            </select>
+            <input id="category1" name="category1" list="category1-options" autocomplete="off" placeholder="输入或选择一级分类">
+            <datalist id="category1-options"></datalist>
+            <span class="field-hint" data-hint-for="category1"></span>
           </label>
           <label>
             二级分类
-            <select id="category2" name="category2" disabled>
-              <option value="">先选择一级分类</option>
-            </select>
+            <input id="category2" name="category2" list="category2-options" autocomplete="off" placeholder="输入或选择二级分类">
+            <datalist id="category2-options"></datalist>
+            <span class="field-hint" data-hint-for="category2"></span>
           </label>
           <label>
             三级分类
-            <select id="category3" name="category3" disabled>
-              <option value="">先选择二级分类</option>
-            </select>
+            <input id="category3" name="category3" list="category3-options" autocomplete="off" placeholder="输入或选择三级分类">
+            <datalist id="category3-options"></datalist>
+            <span class="field-hint" data-hint-for="category3"></span>
           </label>
           <div class="field-grid">
             <label>
               SPU
-              <select id="spu" name="spu" disabled>
-                <option value="">先选择分类</option>
-              </select>
+              <input id="spu" name="spu" list="spu-options" autocomplete="off" placeholder="如 IB7036">
+              <datalist id="spu-options"></datalist>
+              <span class="field-hint" data-hint-for="spu"></span>
             </label>
             <label>
               SKU
-              <select id="sku" name="sku" disabled>
-                <option value="">先选择 SPU</option>
-              </select>
+              <input id="sku" name="sku" list="sku-options" autocomplete="off" placeholder="如 IB7036-BLACK">
+              <datalist id="sku-options"></datalist>
+              <span class="field-hint" data-hint-for="sku"></span>
             </label>
           </div>
           <label>
             ASIN
-            <select id="asin" name="asin" required disabled>
-              <option value="">先选择 SKU</option>
-            </select>
+            <input id="asin" name="asin" list="asin-options" autocomplete="off" inputmode="latin" maxlength="10" placeholder="B09V366BDY" required>
+            <datalist id="asin-options"></datalist>
+            <span class="field-hint" data-hint-for="asin"></span>
           </label>
           <div id="product-summary" class="product-summary" aria-live="polite">
             选择 ASIN 后显示产品信息。
@@ -75,6 +75,11 @@
             广告报表
             <input id="report-file" name="report-file" type="file" accept=".xlsx,.csv" required>
           </label>
+          <div class="usage-note">
+            <strong>使用规则</strong>
+            <p>每个字段都可输入搜索，也可点候选选择。可直接从 SPU、SKU 或 ASIN 开始；系统会自动补齐能唯一确定的字段。</p>
+            <p>红框表示当前匹配到多个可能值，需要继续选择。提交前必须确定站点、店铺、ASIN，并上传对应广告报表。</p>
+          </div>
           <button id="submit-task" class="primary-button" type="submit">提交分析</button>
           <p id="task-message" class="form-message" role="status"></p>
         </form>
@@ -92,7 +97,7 @@
       </section>
     </main>
 
-    <script src="../assets/app.js?v=20260815-product-map"></script>
+    <script src="../assets/app.js?v=20260815-combo-fields"></script>
     <script>
       window.YiquApp.initToolPage();
     </script>

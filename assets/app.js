@@ -3,7 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
-    productMapUrl: "../assets/product-map.json?v=20260815-product-map",
+    productMapUrl: "../assets/product-map.json?v=20260815-combo-fields",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -111,16 +111,15 @@
     }
   }
 
-  const productEmptyValue = "__empty__";
   const productFields = [
-    { id: "site", key: "countryCode", label: "站点", placeholder: "请选择站点" },
-    { id: "store", key: "store", label: "店铺", placeholder: "全部店铺" },
-    { id: "category1", key: "category1", label: "一级分类", placeholder: "全部一级分类" },
-    { id: "category2", key: "category2", label: "二级分类", placeholder: "全部二级分类" },
-    { id: "category3", key: "category3", label: "三级分类", placeholder: "全部三级分类" },
-    { id: "spu", key: "spu", label: "SPU", placeholder: "全部 SPU" },
-    { id: "sku", key: "sku", label: "SKU", placeholder: "全部 SKU" },
-    { id: "asin", key: "asin", label: "ASIN", placeholder: "请选择 ASIN" }
+    { id: "site", key: "countryCode", label: "站点", required: true },
+    { id: "store", key: "store", label: "店铺", required: true },
+    { id: "category1", key: "category1", label: "一级分类" },
+    { id: "category2", key: "category2", label: "二级分类" },
+    { id: "category3", key: "category3", label: "三级分类" },
+    { id: "spu", key: "spu", label: "SPU" },
+    { id: "sku", key: "sku", label: "SKU" },
+    { id: "asin", key: "asin", label: "ASIN", required: true }
   ];
 
   function normalizeProductValue(value) {
@@ -129,11 +128,7 @@
 
   function selectValue(node) {
     if (!node) return "";
-    return node.value === productEmptyValue ? "" : node.value;
-  }
-
-  function productOptionValue(value) {
-    return value ? value : productEmptyValue;
+    return normalizeProductValue(node.value);
   }
 
   function uniqueProducts(rows, key) {
@@ -151,32 +146,68 @@
       });
   }
 
-  function matchingProductRows(rows, fields, stopIndex) {
-    return rows.filter((row) => {
-      for (let index = 0; index < stopIndex; index += 1) {
-        const field = fields[index];
-        const node = $(`#${field.id}`);
-        if (!node || !node.value) continue;
-        if (normalizeProductValue(row[field.key]) !== selectValue(node)) return false;
-      }
-      return true;
-    });
+  function productFieldValue(row, field) {
+    return normalizeProductValue(row[field.key]);
   }
 
-  function setProductSelectOptions(node, options, placeholder, required) {
-    node.innerHTML = "";
-    const first = document.createElement("option");
-    first.value = "";
-    first.textContent = placeholder;
-    node.appendChild(first);
-    options.forEach((option) => {
+  function siteLabels(row) {
+    const code = normalizeProductValue(row.countryCode);
+    const label = normalizeProductValue(row.countryLabel);
+    return [code, label, label ? `${code} · ${label}` : code].filter(Boolean);
+  }
+
+  function productFieldExact(row, field, input) {
+    const value = normalizeProductValue(input);
+    if (!value) return true;
+    if (field.id === "site") return siteLabels(row).some((item) => item.toLowerCase() === value.toLowerCase());
+    return productFieldValue(row, field).toLowerCase() === value.toLowerCase();
+  }
+
+  function productFieldSearch(row, field, input) {
+    const value = normalizeProductValue(input).toLowerCase();
+    if (!value) return true;
+    if (field.id === "site") return siteLabels(row).some((item) => item.toLowerCase().includes(value));
+    return productFieldValue(row, field).toLowerCase().includes(value);
+  }
+
+  function hasExactProductValue(rows, field, input) {
+    const value = normalizeProductValue(input);
+    return !!value && rows.some((row) => productFieldExact(row, field, value));
+  }
+
+  function exactMatchedRows(rows, fields) {
+    return rows.filter((row) => fields.every((field) => {
+      const value = selectValue(field.node);
+      if (!value) return true;
+      return hasExactProductValue(rows, field, value) ? productFieldExact(row, field, value) : true;
+    }));
+  }
+
+  function setFieldOptions(field, rows) {
+    const datalist = $(`#${field.id}-options`);
+    if (!datalist) return;
+    const inputValue = selectValue(field.node);
+    let options = [];
+    if (field.id === "site") {
+      const byCode = new Map();
+      rows.forEach((row) => {
+        if (!productFieldSearch(row, field, inputValue)) return;
+        const code = normalizeProductValue(row.countryCode);
+        const label = normalizeProductValue(row.countryLabel);
+        if (code && !byCode.has(code)) byCode.set(code, label);
+      });
+      options = Array.from(byCode, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value));
+    } else {
+      options = uniqueProducts(rows.filter((row) => productFieldSearch(row, field, inputValue)), field.key)
+        .filter((option) => option.value);
+    }
+    datalist.innerHTML = "";
+    options.slice(0, 80).forEach((option) => {
       const item = document.createElement("option");
-      item.value = productOptionValue(option.value);
-      item.textContent = option.label;
-      node.appendChild(item);
+      item.value = option.value;
+      if (option.label && option.label !== option.value) item.label = option.label;
+      datalist.appendChild(item);
     });
-    node.disabled = options.length === 0;
-    if (required && options.length === 1) node.value = productOptionValue(options[0].value);
   }
 
   function summarizeProduct(row) {
@@ -198,7 +229,11 @@
 
   async function setupProductSelectors(message) {
     const summary = $("#product-summary");
-    const selectors = productFields.map((field) => ({ ...field, node: $(`#${field.id}`) }));
+    const selectors = productFields.map((field) => ({
+      ...field,
+      node: $(`#${field.id}`),
+      hint: document.querySelector(`[data-hint-for="${field.id}"]`)
+    }));
     if (selectors.some((field) => !field.node)) return { selectedProduct: () => null };
 
     let rows = [];
@@ -215,67 +250,107 @@
       return { selectedProduct: () => null };
     }
 
+    function rowsForOptions(field) {
+      return rows.filter((row) => selectors.every((other) => {
+        if (other.id === field.id) return true;
+        const value = selectValue(other.node);
+        if (!value) return true;
+        return hasExactProductValue(rows, other, value) ? productFieldExact(row, other, value) : true;
+      }));
+    }
+
+    function candidateRows() {
+      return exactMatchedRows(rows, selectors);
+    }
+
     function currentSelectedRow() {
       const asin = selectValue($("#asin"));
       if (!asin) return null;
-      return matchingProductRows(rows, selectors, selectors.length)
-        .find((row) => normalizeProductValue(row.asin) === asin) || null;
+      const candidates = candidateRows().filter((row) => productFieldExact(row, selectors.find((field) => field.id === "asin"), asin));
+      return candidates[0] || null;
     }
 
-    function refreshFrom(changedIndex) {
-      for (let index = changedIndex + 1; index < selectors.length; index += 1) {
-        selectors[index].node.value = "";
-      }
+    function autoFillUniqueFields(anchorField) {
+      if (!anchorField || !hasExactProductValue(rows, anchorField, selectValue(anchorField.node))) return;
+      let candidates = candidateRows().filter((row) => productFieldExact(row, anchorField, selectValue(anchorField.node)));
+      if (!candidates.length) return;
 
-      selectors.forEach((field, index) => {
-        const filtered = matchingProductRows(rows, selectors, index);
-        let options = uniqueProducts(filtered, field.key);
+      selectors.forEach((field) => {
+        if (field.id === anchorField.id || selectValue(field.node)) return;
+        const values = uniqueProducts(candidates, field.key).filter((option) => option.value);
         if (field.id === "site") {
-          const byCode = new Map();
-          filtered.forEach((row) => {
+          const sites = new Map();
+          candidates.forEach((row) => {
             const code = normalizeProductValue(row.countryCode);
-            const label = normalizeProductValue(row.countryLabel);
-            if (code && !byCode.has(code)) byCode.set(code, label ? `${code} · ${label}` : code);
+            if (code) sites.set(code, true);
           });
-          options = Array.from(byCode, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value));
+          if (sites.size === 1) field.node.value = Array.from(sites.keys())[0];
+          return;
         }
-        if (field.id === "asin") {
-          const byAsin = new Map();
-          filtered.forEach((row) => {
-            const asin = normalizeProductValue(row.asin);
-            if (!asin || byAsin.has(asin)) return;
-            const suffix = [row.sku, row.spu, row.productName].filter(Boolean)[0];
-            byAsin.set(asin, suffix ? `${asin}｜${suffix}` : asin);
-          });
-          options = Array.from(byAsin, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value));
-        }
-        const previous = field.node.value;
-        setProductSelectOptions(field.node, options, field.placeholder, field.id === "site");
-        if (previous && Array.from(field.node.options).some((option) => option.value === previous)) {
-          field.node.value = previous;
-        }
+        if (values.length === 1) field.node.value = values[0].value;
       });
+    }
 
+    function updateFieldState(field, candidates, optionRows) {
+      const value = selectValue(field.node);
+      const options = uniqueProducts(candidates, field.key).filter((option) => option.value);
+      const searchOptions = uniqueProducts(optionRows.filter((row) => productFieldSearch(row, field, value)), field.key)
+        .filter((option) => option.value);
+      const exact = !value || hasExactProductValue(rows, field, value);
+      const needsChoice = !value && options.length > 1;
+      const invalid = !!value && !exact && searchOptions.length === 0;
+      const partial = !!value && !exact && searchOptions.length > 0;
+      const requiredBlank = field.required && !value;
+      field.node.classList.toggle("needs-choice", needsChoice || requiredBlank || invalid);
+      field.node.classList.toggle("is-confirmed", !!value && exact);
+      if (!field.hint) return;
+      if (invalid) {
+        field.hint.textContent = "没有匹配项，请改字或从候选里选。";
+        field.hint.classList.add("is-warning");
+      } else if (needsChoice) {
+        field.hint.textContent = `匹配到 ${options.length} 个候选，需要选择。`;
+        field.hint.classList.add("is-warning");
+      } else if (partial) {
+        field.hint.textContent = `已出现 ${searchOptions.length} 个候选，请从候选里选完整值。`;
+        field.hint.classList.remove("is-warning");
+      } else if (requiredBlank) {
+        field.hint.textContent = "提交前必须确定。";
+        field.hint.classList.add("is-warning");
+      } else if (value && exact) {
+        field.hint.textContent = "已确定。";
+        field.hint.classList.remove("is-warning");
+      } else {
+        field.hint.textContent = "";
+        field.hint.classList.remove("is-warning");
+      }
+    }
+
+    function refresh(anchorField) {
+      if (anchorField && anchorField.id === "asin") anchorField.node.value = selectValue(anchorField.node).toUpperCase();
+      autoFillUniqueFields(anchorField);
+      const candidates = candidateRows();
+      selectors.forEach((field, index) => {
+        const optionRows = rowsForOptions(field);
+        setFieldOptions(field, optionRows);
+        updateFieldState(field, candidates, optionRows);
+      });
       const selected = currentSelectedRow();
       if (summary) summary.innerHTML = summarizeProduct(selected);
     }
 
-    selectors.forEach((field, index) => {
-      field.node.addEventListener("change", () => refreshFrom(index));
+    selectors.forEach((field) => {
+      field.node.disabled = false;
+      field.node.addEventListener("input", () => refresh(field));
+      field.node.addEventListener("change", () => refresh(field));
     });
 
-    refreshFrom(-1);
-    if (Array.from($("#site").options).some((option) => option.value === "US")) {
-      $("#site").value = "US";
-      refreshFrom(0);
-    }
+    refresh(null);
 
     return {
       selectedProduct: currentSelectedRow,
       reset: () => {
         selectors.forEach((field) => { field.node.value = ""; });
-        if (Array.from($("#site").options).some((option) => option.value === "US")) $("#site").value = "US";
-        refreshFrom(0);
+        refresh(null);
       }
     };
   }
