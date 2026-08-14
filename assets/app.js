@@ -519,6 +519,20 @@
       .table-title { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
       .table-title h2 { margin: 0; font-size: 18px; }
       .table-title span { color: #667085; font-size: 12px; }
+      .action-panel { display: grid; gap: 10px; margin: 14px 0 18px; }
+      .action-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 14px; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; }
+      .action-title { margin-right: 8px; font-size: 16px; font-weight: 800; color: #172033; }
+      .filter-button, .legend-pill { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 0 13px; border-radius: 999px; border: 1px solid #d5deea; background: #fff; color: #344054; font-size: 13px; font-weight: 700; }
+      .filter-button { cursor: pointer; }
+      .filter-button.is-active { border-color: #172033; box-shadow: inset 0 0 0 2px #172033; }
+      .dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; }
+      .cat-boost { color: #1677ff; background: #edf5ff; }
+      .cat-keep { color: #12a150; background: #ebf8f0; }
+      .cat-caution { color: #dc2626; background: #fff1f1; }
+      .cat-optimize { color: #d99000; background: #fff7e5; }
+      .cat-stop { color: #667085; background: #f1f3f6; }
+      .rule-note { color: #667085; font-size: 13px; line-height: 1.6; }
+      tr.is-hidden { display: none; }
       .table-wrap { border-radius: 8px; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
       table { min-width: 1740px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
       th, td { font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
@@ -584,10 +598,34 @@
     const adRows = rows.filter((row) => text(row.cells[8]).indexOf("无投放") === -1);
     const weeklyTotal = rows.reduce((sum, row) => sum + numberFrom(text(row.cells[2])), 0);
     const avgDifficulty = rows.length ? Math.round(rows.reduce((sum, row) => sum + numberFrom(text(row.cells[4])), 0) / rows.length) : 0;
-    const avgAcos = adRows.length ? adRows.reduce((sum, row) => {
-      const match = text(row.cells[8]).match(/([0-9.]+)%\s*$/);
-      return sum + (match ? Number(match[1]) : 0);
-    }, 0) / adRows.length : 0;
+      const avgAcos = adRows.length ? adRows.reduce((sum, row) => {
+        const match = text(row.cells[8]).match(/([0-9.]+)%\s*$/);
+        return sum + (match ? Number(match[1]) : 0);
+      }, 0) / adRows.length : 0;
+
+    const categoryMap = {
+      boost: { label: "加投/防守", className: "cat-boost" },
+      keep: { label: "保持", className: "cat-keep" },
+      caution: { label: "谨慎投放", className: "cat-caution" },
+      optimize: { label: "优化", className: "cat-optimize" },
+      stop: { label: "停止投放/止损", className: "cat-stop" },
+    };
+    const classifyRow = (row) => {
+      const advice = text(row.cells[9]);
+      if (/暂停|止损|否定/.test(advice)) return "stop";
+      if (/降价|复查|优化|Listing|查图/.test(advice)) return "optimize";
+      if (/谨慎|长尾|不硬碰|测试/.test(advice)) return "caution";
+      if (/守住|放大|防守|加码/.test(advice)) return "boost";
+      return "keep";
+    };
+    const counts = { all: rows.length, boost: 0, keep: 0, caution: 0, optimize: 0, stop: 0 };
+    rows.forEach((row) => {
+      const category = classifyRow(row);
+      row.dataset.category = category;
+      counts[category] += 1;
+      const tag = row.cells[9] && row.cells[9].querySelector(".tag");
+      if (tag) tag.classList.add(categoryMap[category].className);
+    });
 
     const hero = doc.createElement("section");
     hero.className = "report-hero";
@@ -608,6 +646,22 @@
     title.className = "table-title";
     title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表</span>";
     metrics.after(title);
+
+    const actionPanel = doc.createElement("section");
+    actionPanel.className = "action-panel";
+    actionPanel.innerHTML = `
+      <div class="action-row">
+        <span class="action-title">颜色图例</span>
+        ${Object.entries(categoryMap).map(([key, item]) => `<span class="legend-pill ${item.className}"><span class="dot"></span>${item.label}</span>`).join("")}
+      </div>
+      <div class="action-row" data-filter-row>
+        <span class="action-title">筛选</span>
+        <button class="filter-button is-active" type="button" data-filter="all">全部 ${counts.all}</button>
+        ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
+      </div>
+      <div class="rule-note">规则口径：谨慎投放 = 证据不足或竞争偏硬，先小预算验证；优化 = 已有花费或转化证据显示效率未达要求，先修复主图/Listing/CPC后再放量；停止投放/止损 = 低相关或高花费无单，优先暂停或否定。</div>
+    `;
+    title.after(actionPanel);
 
     const thead = table.querySelector("thead");
     if (thead) {
@@ -648,6 +702,21 @@
       img.setAttribute("loading", "lazy");
       img.setAttribute("onerror", "this.replaceWith(Object.assign(document.createElement('span'), { className: 'image-fallback', textContent: this.parentNode.textContent.trim().slice(0,4) || 'ASIN' }))");
     });
+
+    const filterScript = doc.createElement("script");
+    filterScript.textContent = `
+      document.querySelectorAll('[data-filter]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var value = button.getAttribute('data-filter');
+          document.querySelectorAll('[data-filter]').forEach(function (item) { item.classList.remove('is-active'); });
+          button.classList.add('is-active');
+          document.querySelectorAll('tbody tr').forEach(function (row) {
+            row.classList.toggle('is-hidden', value !== 'all' && row.dataset.category !== value);
+          });
+        });
+      });
+    `;
+    doc.body.appendChild(filterScript);
 
     return doc.documentElement.outerHTML;
   }
