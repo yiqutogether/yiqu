@@ -297,8 +297,10 @@
       if (task.status !== "已完成" || !task.report_url) throw new Error("报告还没生成。");
 
       const reportUrl = normalizeReportUrl(task.report_url);
-      const response = await fetch(reportUrl);
-      if (!response.ok) throw new Error("报告文件读取失败。");
+      const response = await fetch(reportUrl).catch((error) => {
+        throw new Error(`报告文件网络读取失败。请检查 OSS CORS 是否放行当前来源：${location.origin}；报告地址：${reportUrl}；浏览器错误：${error.message || error}`);
+      });
+      if (!response.ok) throw new Error(`报告文件读取失败，OSS 返回 HTTP ${response.status}。报告地址：${reportUrl}`);
       const html = await response.text();
       frame.srcdoc = html;
       frame.style.display = "block";
