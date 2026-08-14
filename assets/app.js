@@ -540,8 +540,10 @@
       table { min-width: 2520px !important; table-layout: fixed !important; border-collapse: separate !important; border-spacing: 0 !important; }
       th, td { position: relative; font-size: 12px !important; padding: 11px 10px !important; border-bottom: 1px solid #dfe6ee !important; vertical-align: top; }
       th { color: #17324d !important; background: #eef4fb !important; }
-      th .resize-handle { position: absolute; top: 0; right: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 8; }
-      th .resize-handle:hover { background: rgba(47, 111, 206, .22); }
+      th[data-col-index] { user-select: none; }
+      th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 8; }
+      th .resize-handle::after { content: ""; position: absolute; top: 9px; bottom: 9px; right: 3px; width: 2px; border-radius: 2px; background: rgba(47, 111, 206, .28); }
+      th .resize-handle:hover::after, th .resize-handle.is-dragging::after { right: 2px; width: 4px; background: #2f6fce; }
       tbody tr:nth-child(even) td { background: #fbfdff; }
       tbody tr:hover td { background: #f6fbff; }
       th:nth-child(1), td:nth-child(1) { width: 180px; position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
@@ -799,6 +801,7 @@
     [190, 130, 240, 110, 130, 150, 155, 270, 95, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
       const col = doc.createElement("col");
       col.style.width = `${width}px`;
+      col.dataset.defaultWidth = String(width);
       colgroup.appendChild(col);
     });
     table.insertBefore(colgroup, table.firstChild);
@@ -811,7 +814,7 @@
         th.dataset.colIndex = String(index + 2);
       });
       thead.querySelectorAll("th[data-col-index]").forEach((th) => {
-        th.insertAdjacentHTML("beforeend", '<span class="resize-handle" aria-hidden="true"></span>');
+        th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
       });
     }
 
@@ -906,8 +909,17 @@
           });
         });
       });
-      document.querySelectorAll('th[data-col-index] .resize-handle').forEach(function (handle) {
-        handle.addEventListener('mousedown', function (event) {
+      document.addEventListener('dblclick', function (event) {
+        var handle = event.target.closest && event.target.closest('.resize-handle');
+        if (!handle) return;
+        var th = handle.parentElement;
+        var index = Number(th.getAttribute('data-col-index'));
+        var col = document.querySelectorAll('colgroup col')[index];
+        if (col && col.dataset.defaultWidth) col.style.width = col.dataset.defaultWidth + 'px';
+      });
+      document.addEventListener('mousedown', function (event) {
+        var handle = event.target.closest && event.target.closest('.resize-handle');
+        if (handle) {
           event.preventDefault();
           var th = handle.parentElement;
           var index = Number(th.getAttribute('data-col-index'));
@@ -915,6 +927,7 @@
           if (!col) return;
           var startX = event.clientX;
           var startWidth = parseInt(col.style.width, 10) || th.offsetWidth;
+          handle.classList.add('is-dragging');
           document.body.style.cursor = 'col-resize';
           document.body.style.userSelect = 'none';
           function move(moveEvent) {
@@ -926,10 +939,11 @@
             document.removeEventListener('mouseup', up);
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
+            handle.classList.remove('is-dragging');
           }
           document.addEventListener('mousemove', move);
           document.addEventListener('mouseup', up);
-        });
+        }
       });
     `;
     doc.body.appendChild(filterScript);
