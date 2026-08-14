@@ -451,7 +451,7 @@
           metrics.className = "metric-grid";
           metrics.innerHTML =
             '<div class="metric-card"><span>报告关键词</span><strong>' + rows.length + '</strong></div>' +
-            '<div class="metric-card"><span>合计周搜索量</span><strong>' + compact(weeklyTotal) + '</strong></div>' +
+            '<div class="metric-card"><span>合计最新周搜索量</span><strong>' + compact(weeklyTotal) + '</strong></div>' +
             '<div class="metric-card"><span>有广告数据</span><strong>' + adRows.length + '</strong></div>' +
             '<div class="metric-card"><span>平均难度</span><strong>' + avgDifficulty + '</strong></div>' +
             '<div class="metric-card"><span>广告平均 ACOS</span><strong>' + (avgAcos ? avgAcos.toFixed(1) + '%' : '-') + '</strong></div>';
@@ -475,7 +475,7 @@
               '<th rowspan="2">打法建议</th>';
             var labels = document.createElement("tr");
             labels.innerHTML =
-              '<th>ASIN总流量</th><th>周搜索量</th><th>ABA 13周</th><th>难度</th><th>建议竞价</th>' +
+              '<th>ASIN总流量</th><th>最新周搜索量</th><th>ABA 12月</th><th>难度</th><th>建议竞价</th>' +
               '<th>自然位</th><th>点击前三/竞品</th><th>点击/花费/订单/ACOS</th>';
             thead.textContent = "";
             thead.appendChild(group);
@@ -651,18 +651,65 @@
         rank: null
       })).filter((item) => item.value > 0);
     };
-    const trendBars = (points, keyword) => {
+    const monthlyTrendPoints = (sourceCell, weeklyPoints) => {
+      const raw = sourceCell && sourceCell.getAttribute ? (sourceCell.getAttribute("data-aba-monthly") || "") : "";
+      if (raw) {
+        try {
+          const parsed = JSON.parse(decodeEntities(raw));
+          if (Array.isArray(parsed)) {
+            const points = parsed.map((item, index) => ({
+              index: index + 1,
+              month: item.month || "",
+              value: Number(item.monthlySearchVolume || 0),
+              rank: item.averageSearchFrequencyRank ?? null,
+              weeks: Array.isArray(item.weeks) ? item.weeks.map((week, weekIndex) => ({
+                index: weekIndex + 1,
+                from: week.from || "",
+                to: week.to || "",
+                value: Number(week.weeklySearchVolume || 0),
+                rank: week.searchFrequencyRank ?? null
+              })) : []
+            })).filter((item) => item.value > 0);
+            if (points.length) return points;
+          }
+        } catch (_) {}
+      }
+
+      const buckets = new Map();
+      weeklyPoints.forEach((item) => {
+        const key = item.to ? item.to.slice(0, 7) : "";
+        if (!key) return;
+        if (!buckets.has(key)) buckets.set(key, { month: key, value: 0, ranks: [], weeks: [] });
+        const bucket = buckets.get(key);
+        bucket.value += Number(item.value || 0);
+        if (item.rank != null && Number.isFinite(Number(item.rank))) bucket.ranks.push(Number(item.rank));
+        bucket.weeks.push(item);
+      });
+      return Array.from(buckets.values()).sort((a, b) => a.month.localeCompare(b.month)).slice(-12).map((bucket, index) => ({
+        index: index + 1,
+        month: bucket.month,
+        value: bucket.value,
+        rank: bucket.ranks.length ? Math.round(bucket.ranks.reduce((sum, value) => sum + value, 0) / bucket.ranks.length) : null,
+        weeks: bucket.weeks
+      }));
+    };
+    const formatPeriod = (item) => {
+      if (item.month) return item.month;
+      if (item.from && item.to) return `${item.from} 至 ${item.to}`;
+      return "日期缺失";
+    };
+    const trendBars = (points, keyword, weeklyDetail) => {
       if (points.length < 2) return doc.createTextNode(points.map((item) => compact(item.value)).join(" -> "));
       const max = Math.max(...points.map((item) => item.value));
       const wrap = doc.createElement("div");
-      const detail = JSON.stringify(points);
-      wrap.innerHTML = `<div class="trend-bars" role="button" tabindex="0" data-keyword="${escapeHtml(keyword)}" data-aba-detail="${escapeHtml(detail)}" aria-label="打开 ABA 13周趋势明细">${points.map((item) => {
+      const detail = JSON.stringify(weeklyDetail && weeklyDetail.length ? weeklyDetail : points);
+      wrap.innerHTML = `<div class="trend-bars" role="button" tabindex="0" data-keyword="${escapeHtml(keyword)}" data-aba-detail="${escapeHtml(detail)}" aria-label="打开 ABA 趋势明细">${points.map((item) => {
         const value = item.value;
         const height = Math.max(6, Math.round((value / (max || 1)) * 38));
-        const period = item.from && item.to ? `${item.from} 至 ${item.to}` : `第 ${item.index} 周`;
+        const period = formatPeriod(item);
         const title = `${period} / ABA搜索量 ${compact(value)} / ABA排名 ${item.rank ?? "-"}`;
         return `<span class="trend-bar" style="height:${height}px" title="${escapeHtml(title)}"></span>`;
-      }).join("")}</div><div class="trend-meta">${compact(points[0].value)} -> ${compact(points[points.length - 1].value)} · 点击看明细</div>`;
+      }).join("")}</div><div class="trend-meta">${points[0].month || points[0].from || ""} -> ${points[points.length - 1].month || points[points.length - 1].to || ""} · 点击看周明细</div>`;
       return wrap;
     };
 
@@ -714,7 +761,7 @@
     metrics.className = "metric-grid";
     metrics.innerHTML =
       `<div class="metric-card"><span>报告关键词</span><strong>${rows.length}</strong></div>` +
-      `<div class="metric-card"><span>合计周搜索量</span><strong>${compact(weeklyTotal)}</strong></div>` +
+      `<div class="metric-card"><span>合计最新周搜索量</span><strong>${compact(weeklyTotal)}</strong></div>` +
       `<div class="metric-card"><span>有广告数据</span><strong>${adRows.length}</strong></div>` +
       `<div class="metric-card"><span>平均难度</span><strong>${avgDifficulty}</strong></div>` +
       `<div class="metric-card"><span>广告平均 ACOS</span><strong>${avgAcos ? `${avgAcos.toFixed(1)}%` : "-"}</strong></div>`;
@@ -722,7 +769,7 @@
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-aba-modal</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-aba-12m</span>";
     metrics.after(title);
 
     const money = (value) => {
@@ -781,18 +828,18 @@
       if (value >= 60) return { label: "中", className: "mid" };
       return { label: "低", className: "low" };
     };
-    const seasonMeta = (parts) => {
-      const values = parts.map(trendValue).filter((n) => n > 0);
-      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 13周不足" };
+    const seasonMeta = (points) => {
+      const values = points.map((item) => Number(item.value || 0)).filter((n) => n > 0);
+      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 12月不足" };
       const first = values[0];
       const last = values[values.length - 1];
       const avg = values.reduce((sum, n) => sum + n, 0) / values.length;
       const range = Math.max(...values) - Math.min(...values);
       const change = first ? (last - first) / first : 0;
-      if (change > 0.15) return { label: "近期旺季抬升", sub: "按 ABA 13周趋势判断" };
-      if (change < -0.15) return { label: "近期淡季回落", sub: "按 ABA 13周趋势判断" };
-      if (avg && range / avg > 0.35) return { label: "季节波动明显", sub: "按 ABA 13周趋势判断" };
-      return { label: "需求相对平稳", sub: "按 ABA 13周趋势判断" };
+      if (change > 0.15) return { label: "旺季抬升", sub: "按 ABA 12月趋势判断" };
+      if (change < -0.15) return { label: "淡季回落", sub: "按 ABA 12月趋势判断" };
+      if (avg && range / avg > 0.35) return { label: "季节波动明显", sub: "按 ABA 12月趋势判断" };
+      return { label: "需求相对平稳", sub: "按 ABA 12月趋势判断" };
     };
     const marketConversionMeta = (sourceCell) => {
       if (sourceCell && sourceCell.dataset && sourceCell.dataset.marketConversion) {
@@ -847,7 +894,7 @@
     if (thead) {
       thead.innerHTML =
         `<tr class="group-row"><th rowspan="2">关键词 / 标签</th><th rowspan="2">ASIN总流量</th><th class="group-market" colspan="5">市场</th><th class="group-competition" colspan="1">竞对</th><th class="group-self" colspan="1">自身</th><th class="group-ad" colspan="6">广告报表数据</th><th rowspan="2">打法建议</th></tr>` +
-        `<tr><th>搜索量 + ABA趋势</th><th>难度</th><th>建议竞价</th><th>市场转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
+        `<tr><th>搜索量 + ABA 12月</th><th>难度</th><th>建议竞价</th><th>市场转化相关</th><th>季节性标注</th><th>点击前三ASIN</th><th>自然位</th><th>展示</th><th>点击/CTR</th><th>CPC</th><th>订单/CVR</th><th>花费</th><th>销售额/ACOS</th></tr>`;
     }
     const oldColgroup = table.querySelector("colgroup");
     if (oldColgroup) oldColgroup.remove();
@@ -879,6 +926,7 @@
       const weekly = numberFrom(text(original[2]));
       const trendParts = parseTrend(text(original[3]));
       const abaPoints = trendPoints(original[3], trendParts);
+      const monthlyPoints = monthlyTrendPoints(original[3], abaPoints);
       const difficulty = numberFrom(text(original[4]));
       const diff = difficultyMeta(difficulty);
       const bid = parseBid(text(original[5]));
@@ -887,10 +935,11 @@
       const ad = parseAd(original[8]);
       const adviceHtml = htmlOf(original[9]);
       const category = row.dataset.category || classifyRow(row);
-      const season = seasonMeta(trendParts);
+      const season = seasonMeta(monthlyPoints.length ? monthlyPoints : abaPoints);
       const conversion = marketConversionMeta(original[2]);
       const trendWrap = doc.createElement("div");
-      if (abaPoints.length > 1) trendWrap.appendChild(trendBars(abaPoints, keyword));
+      if (monthlyPoints.length > 1) trendWrap.appendChild(trendBars(monthlyPoints, keyword, abaPoints));
+      else if (abaPoints.length > 1) trendWrap.appendChild(trendBars(abaPoints, keyword, abaPoints));
       else trendWrap.textContent = "-";
       const trendHtml = trendWrap.innerHTML || trendWrap.textContent;
       const keywordHtml = `<span class="keyword-name">${escapeHtml(keyword)}</span><span class="keyword-tags">${keywordTags(keyword, category, weekly, difficulty, ad)}</span>`;
@@ -982,7 +1031,7 @@
         try { rows = JSON.parse(raw); } catch (_) { rows = []; }
         modal.querySelector('.aba-modal-keyword').textContent = keyword;
         modal.querySelector('tbody').innerHTML = rows.map(function (item) {
-          var period = item.from && item.to ? item.from + ' 至 ' + item.to : '第 ' + item.index + ' 周';
+          var period = item.from && item.to ? item.from + ' 至 ' + item.to : (item.month || '日期缺失');
           var value = Number(item.value || 0).toLocaleString('en-US');
           var rank = item.rank == null ? '-' : Number(item.rank).toLocaleString('en-US');
           return '<tr><td>' + period + '</td><td>' + value + '</td><td>' + rank + '</td></tr>';
