@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>关键词作战台</title>
-    <link rel="stylesheet" href="../assets/styles.css?v=20260814-task-label">
+    <link rel="stylesheet" href="../assets/styles.css?v=20260815-product-map">
   </head>
   <body class="app-page">
     <header class="topbar">
@@ -20,40 +20,57 @@
         <form id="task-form" class="form-stack">
           <label>
             站点
-            <select id="site" name="site">
-              <option value="US">US</option>
-              <option value="CA">CA</option>
-              <option value="MX">MX</option>
-              <option value="UK">UK</option>
-              <option value="DE">DE</option>
-              <option value="FR">FR</option>
-              <option value="IT">IT</option>
-              <option value="ES">ES</option>
-              <option value="JP">JP</option>
+            <select id="site" name="site" required>
+              <option value="">正在加载产品映射...</option>
             </select>
           </label>
           <label>
             店铺
-            <input id="store" name="store" type="text" placeholder="待关联">
+            <select id="store" name="store" disabled>
+              <option value="">先选择站点</option>
+            </select>
           </label>
           <label>
-            产品分类
-            <input id="category" name="category" type="text" placeholder="待关联">
+            一级分类
+            <select id="category1" name="category1" disabled>
+              <option value="">先选择店铺</option>
+            </select>
+          </label>
+          <label>
+            二级分类
+            <select id="category2" name="category2" disabled>
+              <option value="">先选择一级分类</option>
+            </select>
+          </label>
+          <label>
+            三级分类
+            <select id="category3" name="category3" disabled>
+              <option value="">先选择二级分类</option>
+            </select>
           </label>
           <div class="field-grid">
             <label>
               SPU
-              <input id="spu" name="spu" type="text" placeholder="待关联">
+              <select id="spu" name="spu" disabled>
+                <option value="">先选择分类</option>
+              </select>
             </label>
             <label>
               SKU
-              <input id="sku" name="sku" type="text" placeholder="待关联">
+              <select id="sku" name="sku" disabled>
+                <option value="">先选择 SPU</option>
+              </select>
             </label>
           </div>
           <label>
             ASIN
-            <input id="asin" name="asin" type="text" inputmode="latin" maxlength="10" placeholder="B09V366BDY" required>
+            <select id="asin" name="asin" required disabled>
+              <option value="">先选择 SKU</option>
+            </select>
           </label>
+          <div id="product-summary" class="product-summary" aria-live="polite">
+            选择 ASIN 后显示产品信息。
+          </div>
           <label>
             广告报表
             <input id="report-file" name="report-file" type="file" accept=".xlsx,.csv" required>
@@ -75,7 +92,7 @@
       </section>
     </main>
 
-    <script src="../assets/app.js?v=20260814-task-label"></script>
+    <script src="../assets/app.js?v=20260815-product-map"></script>
     <script>
       window.YiquApp.initToolPage();
     </script>

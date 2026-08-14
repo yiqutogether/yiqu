@@ -254,10 +254,33 @@ select:focus {
   overflow: hidden;
 }
 
+.submit-panel .form-stack {
+  gap: 11px;
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.product-summary {
+  min-height: 64px;
+  max-height: 112px;
+  overflow: auto;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.product-summary strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text);
 }
 
 .task-section {

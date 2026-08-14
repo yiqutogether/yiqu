@@ -3,6 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
+    productMapUrl: "../assets/product-map.json?v=20260815-product-map",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -110,6 +111,175 @@
     }
   }
 
+  const productEmptyValue = "__empty__";
+  const productFields = [
+    { id: "site", key: "countryCode", label: "站点", placeholder: "请选择站点" },
+    { id: "store", key: "store", label: "店铺", placeholder: "全部店铺" },
+    { id: "category1", key: "category1", label: "一级分类", placeholder: "全部一级分类" },
+    { id: "category2", key: "category2", label: "二级分类", placeholder: "全部二级分类" },
+    { id: "category3", key: "category3", label: "三级分类", placeholder: "全部三级分类" },
+    { id: "spu", key: "spu", label: "SPU", placeholder: "全部 SPU" },
+    { id: "sku", key: "sku", label: "SKU", placeholder: "全部 SKU" },
+    { id: "asin", key: "asin", label: "ASIN", placeholder: "请选择 ASIN" }
+  ];
+
+  function normalizeProductValue(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function selectValue(node) {
+    if (!node) return "";
+    return node.value === productEmptyValue ? "" : node.value;
+  }
+
+  function productOptionValue(value) {
+    return value ? value : productEmptyValue;
+  }
+
+  function uniqueProducts(rows, key) {
+    const map = new Map();
+    rows.forEach((row) => {
+      const value = normalizeProductValue(row[key]);
+      const label = value || "未填写";
+      if (!map.has(value)) map.set(value, label);
+    });
+    return Array.from(map, ([value, label]) => ({ value, label }))
+      .sort((a, b) => {
+        if (!a.value) return 1;
+        if (!b.value) return -1;
+        return a.label.localeCompare(b.label, "zh-CN");
+      });
+  }
+
+  function matchingProductRows(rows, fields, stopIndex) {
+    return rows.filter((row) => {
+      for (let index = 0; index < stopIndex; index += 1) {
+        const field = fields[index];
+        const node = $(`#${field.id}`);
+        if (!node || !node.value) continue;
+        if (normalizeProductValue(row[field.key]) !== selectValue(node)) return false;
+      }
+      return true;
+    });
+  }
+
+  function setProductSelectOptions(node, options, placeholder, required) {
+    node.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = placeholder;
+    node.appendChild(first);
+    options.forEach((option) => {
+      const item = document.createElement("option");
+      item.value = productOptionValue(option.value);
+      item.textContent = option.label;
+      node.appendChild(item);
+    });
+    node.disabled = options.length === 0;
+    if (required && options.length === 1) node.value = productOptionValue(options[0].value);
+  }
+
+  function summarizeProduct(row) {
+    if (!row) return "选择 ASIN 后显示产品信息。";
+    const chunks = [
+      row.productName ? `<strong>${escapeHtml(row.productName)}</strong>` : "",
+      `站点：${escapeHtml(row.countryCode || row.countryLabel || "-")}`,
+      row.store ? `店铺：${escapeHtml(row.store)}` : "",
+      row.category1 || row.category2 || row.category3
+        ? `分类：${escapeHtml([row.category1, row.category2, row.category3].filter(Boolean).join(" / "))}`
+        : "",
+      row.spu ? `SPU：${escapeHtml(row.spu)}` : "",
+      row.sku ? `SKU：${escapeHtml(row.sku)}` : "",
+      row.msku ? `MSKU：${escapeHtml(row.msku)}` : "",
+      row.asin ? `ASIN：${escapeHtml(row.asin)}` : ""
+    ].filter(Boolean);
+    return chunks.join("<br>");
+  }
+
+  async function setupProductSelectors(message) {
+    const summary = $("#product-summary");
+    const selectors = productFields.map((field) => ({ ...field, node: $(`#${field.id}`) }));
+    if (selectors.some((field) => !field.node)) return { selectedProduct: () => null };
+
+    let rows = [];
+    try {
+      const response = await fetch(config.productMapUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error(`产品映射表读取失败，HTTP ${response.status}`);
+      const data = await response.json();
+      rows = Array.isArray(data.rows) ? data.rows : [];
+      if (!rows.length) throw new Error("产品映射表里没有可用记录。");
+    } catch (error) {
+      setMessage(message, friendlyError(error), "error");
+      selectors.forEach((field) => { field.node.disabled = true; });
+      if (summary) summary.textContent = "产品映射表加载失败。";
+      return { selectedProduct: () => null };
+    }
+
+    function currentSelectedRow() {
+      const asin = selectValue($("#asin"));
+      if (!asin) return null;
+      return matchingProductRows(rows, selectors, selectors.length)
+        .find((row) => normalizeProductValue(row.asin) === asin) || null;
+    }
+
+    function refreshFrom(changedIndex) {
+      for (let index = changedIndex + 1; index < selectors.length; index += 1) {
+        selectors[index].node.value = "";
+      }
+
+      selectors.forEach((field, index) => {
+        const filtered = matchingProductRows(rows, selectors, index);
+        let options = uniqueProducts(filtered, field.key);
+        if (field.id === "site") {
+          const byCode = new Map();
+          filtered.forEach((row) => {
+            const code = normalizeProductValue(row.countryCode);
+            const label = normalizeProductValue(row.countryLabel);
+            if (code && !byCode.has(code)) byCode.set(code, label ? `${code} · ${label}` : code);
+          });
+          options = Array.from(byCode, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value));
+        }
+        if (field.id === "asin") {
+          const byAsin = new Map();
+          filtered.forEach((row) => {
+            const asin = normalizeProductValue(row.asin);
+            if (!asin || byAsin.has(asin)) return;
+            const suffix = [row.sku, row.spu, row.productName].filter(Boolean)[0];
+            byAsin.set(asin, suffix ? `${asin}｜${suffix}` : asin);
+          });
+          options = Array.from(byAsin, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value));
+        }
+        const previous = field.node.value;
+        setProductSelectOptions(field.node, options, field.placeholder, field.id === "site");
+        if (previous && Array.from(field.node.options).some((option) => option.value === previous)) {
+          field.node.value = previous;
+        }
+      });
+
+      const selected = currentSelectedRow();
+      if (summary) summary.innerHTML = summarizeProduct(selected);
+    }
+
+    selectors.forEach((field, index) => {
+      field.node.addEventListener("change", () => refreshFrom(index));
+    });
+
+    refreshFrom(-1);
+    if (Array.from($("#site").options).some((option) => option.value === "US")) {
+      $("#site").value = "US";
+      refreshFrom(0);
+    }
+
+    return {
+      selectedProduct: currentSelectedRow,
+      reset: () => {
+        selectors.forEach((field) => { field.node.value = ""; });
+        if (Array.from($("#site").options).some((option) => option.value === "US")) $("#site").value = "US";
+        refreshFrom(0);
+      }
+    };
+  }
+
   function initAuthPage() {
     const current = session();
     if (current && current.access_token) {
@@ -173,13 +343,19 @@
       location.href = "../index.html";
     });
     $("#refresh-tasks").addEventListener("click", loadTasks);
+    const productSelectorControl = await setupProductSelectors(message);
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const asin = $("#asin").value.trim().toUpperCase();
+      const asin = selectValue($("#asin")).trim().toUpperCase();
+      const selectedProduct = productSelectorControl.selectedProduct();
       const file = $("#report-file").files[0];
       if (!/^B0[A-Z0-9]{8}$/.test(asin)) {
-        setMessage(message, "ASIN需要是10位，并且以B0开头。", "error");
+        setMessage(message, "请先从产品映射表里选择一个有效 ASIN。", "error");
+        return;
+      }
+      if (!selectedProduct) {
+        setMessage(message, "当前 ASIN 没有匹配到产品映射记录，请重新选择。", "error");
         return;
       }
       if (!file) {
@@ -226,7 +402,7 @@
         }, true);
 
         form.reset();
-        $("#site").value = "US";
+        productSelectorControl.reset();
         setMessage(message, "提交成功，工人会自动处理。", "ok");
         await loadTasks();
       } catch (error) {
