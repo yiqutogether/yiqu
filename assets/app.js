@@ -3,7 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
-    productMapUrl: "../assets/product-map.json?v=20260815-clear-conflicts",
+    productMapUrl: "../assets/product-map.json?v=20260815-autofill-state",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -235,6 +235,7 @@
       hint: document.querySelector(`[data-hint-for="${field.id}"]`)
     }));
     if (selectors.some((field) => !field.node)) return { selectedProduct: () => null };
+    const autoFilledFields = new Set();
 
     let rows = [];
     try {
@@ -270,6 +271,24 @@
       return candidates[0] || null;
     }
 
+    function clearAutoFilledFields(exceptId) {
+      selectors.forEach((field) => {
+        if (field.id === exceptId || !autoFilledFields.has(field.id)) return;
+        field.node.value = "";
+        autoFilledFields.delete(field.id);
+        if (field.hint) {
+          field.hint.textContent = "已清掉上次自动补齐的旧内容。";
+          field.hint.classList.remove("is-warning");
+        }
+      });
+    }
+
+    function setAutoFilledValue(field, value) {
+      if (!value) return;
+      field.node.value = value;
+      autoFilledFields.add(field.id);
+    }
+
     function clearConflictingFields(anchorField) {
       if (!anchorField) return;
       const anchorValue = selectValue(anchorField.node);
@@ -286,6 +305,7 @@
         const stillCompatible = anchorRows.some((row) => productFieldExact(row, field, value));
         if (!stillCompatible) {
           field.node.value = "";
+          autoFilledFields.delete(field.id);
           if (field.hint) {
             field.hint.textContent = "已清掉和新输入冲突的旧条件。";
             field.hint.classList.remove("is-warning");
@@ -308,10 +328,10 @@
             const code = normalizeProductValue(row.countryCode);
             if (code) sites.set(code, true);
           });
-          if (sites.size === 1) field.node.value = Array.from(sites.keys())[0];
+          if (sites.size === 1) setAutoFilledValue(field, Array.from(sites.keys())[0]);
           return;
         }
-        if (values.length === 1) field.node.value = values[0].value;
+        if (values.length === 1) setAutoFilledValue(field, values[0].value);
       });
     }
 
@@ -349,8 +369,12 @@
       }
     }
 
-    function refresh(anchorField) {
+    function refresh(anchorField, isManualEdit) {
       if (anchorField && anchorField.id === "asin") anchorField.node.value = selectValue(anchorField.node).toUpperCase();
+      if (anchorField && isManualEdit) {
+        autoFilledFields.delete(anchorField.id);
+        clearAutoFilledFields(anchorField.id);
+      }
       clearConflictingFields(anchorField);
       autoFillUniqueFields(anchorField);
       const candidates = candidateRows();
@@ -365,8 +389,8 @@
 
     selectors.forEach((field) => {
       field.node.disabled = false;
-      field.node.addEventListener("input", () => refresh(field));
-      field.node.addEventListener("change", () => refresh(field));
+      field.node.addEventListener("input", () => refresh(field, true));
+      field.node.addEventListener("change", () => refresh(field, true));
     });
 
     const clearButton = $("#clear-product-fields");
@@ -374,6 +398,7 @@
       clearButton.addEventListener("click", () => {
         selectors.forEach((field) => {
           field.node.value = "";
+          autoFilledFields.delete(field.id);
           field.node.classList.remove("needs-choice", "is-confirmed");
           if (field.hint) {
             field.hint.textContent = "";
@@ -389,6 +414,7 @@
     return {
       selectedProduct: currentSelectedRow,
       reset: () => {
+        autoFilledFields.clear();
         selectors.forEach((field) => { field.node.value = ""; });
         refresh(null);
       }
