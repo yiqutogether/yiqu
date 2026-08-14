@@ -683,7 +683,7 @@
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-ad-inline</span>";
     metrics.after(title);
 
     const money = (value) => {
@@ -777,7 +777,12 @@
         return `<span class="keyword-chip ${tag.className}">${escapeHtml(tag.label)}</span>`;
       }).join("");
     };
-    const metric = (main, sub = "") => `<div class="ad-metric"><span class="ad-main">${escapeHtml(main)}</span>${sub ? `<span class="ad-sub">${escapeHtml(sub)}</span>` : ""}</div>`;
+    const metric = (main, sub = "") => (
+      `<div class="ad-metric" style="display:grid;gap:4px;align-content:start;min-height:40px">` +
+      `<strong style="display:block!important;font-size:16px!important;line-height:1.15!important;font-weight:800!important;color:#172033!important;white-space:nowrap">${escapeHtml(main)}</strong>` +
+      (sub ? `<span style="display:block!important;color:#667085!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap">${escapeHtml(sub)}</span>` : "") +
+      `</div>`
+    );
 
     const actionPanel = doc.createElement("section");
     actionPanel.className = "action-panel";
