@@ -557,9 +557,21 @@
       .market-cell { display: grid; gap: 5px; }
       .market-main { font-weight: 800; font-size: 15px; color: #172033; }
       .market-sub, .subtext { color: #667085; font-size: 11px; line-height: 1.35; }
-      .trend-bars { display: flex; align-items: flex-end; gap: 2px; width: 160px; height: 42px; margin-top: 5px; }
-      .trend-bar { flex: 1 1 0; min-width: 3px; border-radius: 2px 2px 0 0; background: #39a892; }
+      .trend-bars { display: flex; align-items: flex-end; gap: 3px; width: 170px; height: 46px; margin-top: 5px; cursor: pointer; }
+      .trend-bar { flex: 1 1 0; min-width: 4px; border-radius: 3px 3px 0 0; background: #39a892; transition: transform .12s ease, background .12s ease; }
+      .trend-bar:hover { transform: translateY(-2px); background: #168f7a; }
       .trend-meta { color: #667085; font-size: 10px; line-height: 1.25; margin-top: 3px; }
+      .aba-modal-backdrop { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, .45); padding: 22px; }
+      .aba-modal-backdrop.is-open { display: flex; }
+      .aba-modal { width: min(760px, 94vw); max-height: 78vh; overflow: hidden; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; box-shadow: 0 20px 50px rgba(15, 23, 42, .22); }
+      .aba-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #e3e9f1; }
+      .aba-modal-head h3 { margin: 0; font-size: 16px; letter-spacing: 0; }
+      .aba-modal-close { width: 34px; height: 34px; border: 1px solid #d5deea; border-radius: 6px; background: #fff; color: #172033; cursor: pointer; font-size: 20px; line-height: 1; }
+      .aba-modal-body { max-height: calc(78vh - 68px); overflow: auto; padding: 14px 18px 18px; }
+      .aba-modal-keyword { margin: 0 0 10px; color: #667085; font-size: 13px; font-weight: 700; }
+      .aba-detail-table { width: 100%; min-width: 0 !important; border-collapse: collapse !important; table-layout: fixed !important; }
+      .aba-detail-table th, .aba-detail-table td { padding: 10px 12px !important; border-bottom: 1px solid #e3e9f1 !important; font-size: 13px !important; position: static; }
+      .aba-detail-table th { background: #eaf7f2 !important; color: #006b55 !important; }
       .keyword-name { display: block; font-weight: 800; margin-bottom: 8px; }
       .keyword-tags { display: flex; flex-wrap: wrap; gap: 5px; }
       .keyword-chip, .season-chip, .conversion-chip, .difficulty-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
@@ -615,15 +627,42 @@
       if (unit === "k") n *= 1000;
       return n;
     };
-    const trendBars = (parts) => {
-      const values = parts.map(trendValue).filter((n) => n > 0);
-      if (values.length < 2) return doc.createTextNode(parts.join(" -> "));
-      const max = Math.max(...values);
+    const trendPoints = (sourceCell, fallbackParts) => {
+      const raw = sourceCell && sourceCell.getAttribute ? (sourceCell.getAttribute("data-aba-trend") || "") : "";
+      if (raw) {
+        try {
+          const parsed = JSON.parse(decodeEntities(raw));
+          if (Array.isArray(parsed)) {
+            return parsed.map((item, index) => ({
+              index: index + 1,
+              from: item.from || "",
+              to: item.to || "",
+              value: Number(item.weeklySearchVolume || 0),
+              rank: item.searchFrequencyRank ?? null
+            })).filter((item) => item.value > 0);
+          }
+        } catch (_) {}
+      }
+      return fallbackParts.map((part, index) => ({
+        index: index + 1,
+        from: "",
+        to: "",
+        value: trendValue(part),
+        rank: null
+      })).filter((item) => item.value > 0);
+    };
+    const trendBars = (points, keyword) => {
+      if (points.length < 2) return doc.createTextNode(points.map((item) => compact(item.value)).join(" -> "));
+      const max = Math.max(...points.map((item) => item.value));
       const wrap = doc.createElement("div");
-      wrap.innerHTML = `<div class="trend-bars" role="img" aria-label="ABA 13周趋势">${values.map((value) => {
+      const detail = JSON.stringify(points);
+      wrap.innerHTML = `<div class="trend-bars" role="button" tabindex="0" data-keyword="${escapeHtml(keyword)}" data-aba-detail="${escapeHtml(detail)}" aria-label="打开 ABA 13周趋势明细">${points.map((item) => {
+        const value = item.value;
         const height = Math.max(6, Math.round((value / (max || 1)) * 38));
-        return `<span class="trend-bar" style="height:${height}px"></span>`;
-      }).join("")}</div><div class="trend-meta">${escapeHtml(parts[0])} -> ${escapeHtml(parts[parts.length - 1])}</div>`;
+        const period = item.from && item.to ? `${item.from} 至 ${item.to}` : `第 ${item.index} 周`;
+        const title = `${period} / ABA搜索量 ${compact(value)} / ABA排名 ${item.rank ?? "-"}`;
+        return `<span class="trend-bar" style="height:${height}px" title="${escapeHtml(title)}"></span>`;
+      }).join("")}</div><div class="trend-meta">${compact(points[0].value)} -> ${compact(points[points.length - 1].value)} · 点击看明细</div>`;
       return wrap;
     };
 
@@ -683,7 +722,7 @@
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-ad-inline</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-aba-modal</span>";
     metrics.after(title);
 
     const money = (value) => {
@@ -839,6 +878,7 @@
       const asinTraffic = text(original[1]);
       const weekly = numberFrom(text(original[2]));
       const trendParts = parseTrend(text(original[3]));
+      const abaPoints = trendPoints(original[3], trendParts);
       const difficulty = numberFrom(text(original[4]));
       const diff = difficultyMeta(difficulty);
       const bid = parseBid(text(original[5]));
@@ -850,7 +890,7 @@
       const season = seasonMeta(trendParts);
       const conversion = marketConversionMeta(original[2]);
       const trendWrap = doc.createElement("div");
-      if (trendParts.length > 1) trendWrap.appendChild(trendBars(trendParts));
+      if (abaPoints.length > 1) trendWrap.appendChild(trendBars(abaPoints, keyword));
       else trendWrap.textContent = "-";
       const trendHtml = trendWrap.innerHTML || trendWrap.textContent;
       const keywordHtml = `<span class="keyword-name">${escapeHtml(keyword)}</span><span class="keyword-tags">${keywordTags(keyword, category, weekly, difficulty, ad)}</span>`;
@@ -912,8 +952,63 @@
       img.setAttribute("onerror", "this.replaceWith(Object.assign(document.createElement('span'), { className: 'image-fallback', textContent: this.parentNode.textContent.trim().slice(0,4) || 'ASIN' }))");
     });
 
+    const abaModal = doc.createElement("div");
+    abaModal.className = "aba-modal-backdrop";
+    abaModal.innerHTML = `
+      <div class="aba-modal" role="dialog" aria-modal="true" aria-labelledby="aba-modal-title">
+        <div class="aba-modal-head">
+          <h3 id="aba-modal-title">ABA趋势明细</h3>
+          <button type="button" class="aba-modal-close" aria-label="关闭">×</button>
+        </div>
+        <div class="aba-modal-body">
+          <p class="aba-modal-keyword"></p>
+          <table class="aba-detail-table">
+            <thead><tr><th>时间段</th><th>ABA搜索量</th><th>ABA排名</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    doc.body.appendChild(abaModal);
+
     const filterScript = doc.createElement("script");
     filterScript.textContent = `
+      function openAbaModal(trigger) {
+        var modal = document.querySelector('.aba-modal-backdrop');
+        if (!modal) return;
+        var keyword = trigger.getAttribute('data-keyword') || '';
+        var raw = trigger.getAttribute('data-aba-detail') || '[]';
+        var rows = [];
+        try { rows = JSON.parse(raw); } catch (_) { rows = []; }
+        modal.querySelector('.aba-modal-keyword').textContent = keyword;
+        modal.querySelector('tbody').innerHTML = rows.map(function (item) {
+          var period = item.from && item.to ? item.from + ' 至 ' + item.to : '第 ' + item.index + ' 周';
+          var value = Number(item.value || 0).toLocaleString('en-US');
+          var rank = item.rank == null ? '-' : Number(item.rank).toLocaleString('en-US');
+          return '<tr><td>' + period + '</td><td>' + value + '</td><td>' + rank + '</td></tr>';
+        }).join('');
+        modal.classList.add('is-open');
+      }
+      function closeAbaModal() {
+        var modal = document.querySelector('.aba-modal-backdrop');
+        if (modal) modal.classList.remove('is-open');
+      }
+      document.addEventListener('click', function (event) {
+        var trend = event.target.closest && event.target.closest('.trend-bars[data-aba-detail]');
+        if (trend) {
+          openAbaModal(trend);
+          return;
+        }
+        if (event.target.closest && event.target.closest('.aba-modal-close')) closeAbaModal();
+        if (event.target.classList && event.target.classList.contains('aba-modal-backdrop')) closeAbaModal();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeAbaModal();
+        if ((event.key === 'Enter' || event.key === ' ') && event.target.matches && event.target.matches('.trend-bars[data-aba-detail]')) {
+          event.preventDefault();
+          openAbaModal(event.target);
+        }
+      });
       document.querySelectorAll('[data-filter]').forEach(function (button) {
         button.addEventListener('click', function () {
           var value = button.getAttribute('data-filter');
