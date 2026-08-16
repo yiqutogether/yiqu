@@ -691,10 +691,11 @@
         .report-hero { margin-bottom: 14px; padding: 22px 24px; border-radius: 8px; color: #fff; background: linear-gradient(120deg, #123a70, #2468d8); }
         .report-hero h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
         .report-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
-        .metric-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
-        .metric-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 13px 16px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .metric-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
         .metric-card span { display: block; color: #667085; font-size: 12px; margin-bottom: 6px; }
         .metric-card strong { display: block; color: #0f172a; font-size: 22px; line-height: 1.1; }
+        .metric-card small { display: block; color: #667085; font-size: 12px; margin-top: 5px; white-space: nowrap; }
         .table-title { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
         .table-title h2 { margin: 0; font-size: 18px; }
         .table-title span { color: #667085; font-size: 12px; }
@@ -869,10 +870,11 @@
       .report-hero { margin-bottom: 14px; padding: 22px 24px; border-radius: 8px; color: #fff; background: linear-gradient(120deg, #123a70, #2468d8); }
       .report-hero h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
       .report-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
-      .metric-grid { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
-      .metric-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 13px 16px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
+      .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+      .metric-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
       .metric-card span { display: block; color: #667085; font-size: 12px; margin-bottom: 6px; }
       .metric-card strong { display: block; color: #0f172a; font-size: 22px; line-height: 1.1; }
+      .metric-card small { display: block; color: #667085; font-size: 12px; margin-top: 5px; white-space: nowrap; }
       .table-title { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
       .table-title h2 { margin: 0; font-size: 18px; }
       .table-title span { color: #667085; font-size: 12px; }
@@ -1284,6 +1286,23 @@
       const categoryItem = categoryMap[category] || categoryMap.missing;
       if (tag) tag.classList.add(categoryItem.className);
     });
+    const kpiMoney = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const kpiPct = (value) => (value == null || !Number.isFinite(value)) ? "-" : `${value.toFixed(1)}%`;
+    const adSummary = rows.reduce((summary, row) => {
+      const ad = parseAdForRules(row);
+      if (ad.hasData) summary.keywordCount += 1;
+      summary.impressions += numberFrom(ad.impressions);
+      summary.clicks += numberFrom(ad.clicks);
+      summary.orders += numberFrom(ad.orders);
+      summary.spend += numberFrom(ad.spend);
+      summary.sales += numberFrom(ad.sales);
+      return summary;
+    }, { keywordCount: 0, impressions: 0, clicks: 0, orders: 0, spend: 0, sales: 0 });
+    adSummary.ctr = adSummary.impressions ? adSummary.clicks / adSummary.impressions * 100 : null;
+    adSummary.cvr = adSummary.clicks ? adSummary.orders / adSummary.clicks * 100 : null;
+    adSummary.cpc = adSummary.clicks ? adSummary.spend / adSummary.clicks : null;
+    adSummary.acos = adSummary.sales ? adSummary.spend / adSummary.sales * 100 : null;
+    adSummary.aov = adSummary.orders ? adSummary.sales / adSummary.orders : null;
 
     const hero = doc.createElement("section");
     hero.className = "report-hero";
@@ -1293,16 +1312,19 @@
     const metrics = doc.createElement("section");
     metrics.className = "metric-grid";
     metrics.innerHTML =
-      `<div class="metric-card"><span>报告关键词</span><strong>${rows.length}</strong></div>` +
-      `<div class="metric-card"><span>合计最新周搜索量</span><strong>${compact(weeklyTotal)}</strong></div>` +
-      `<div class="metric-card"><span>有广告数据</span><strong>${adRows.length}</strong></div>` +
-      `<div class="metric-card"><span>平均难度</span><strong>${avgDifficulty}</strong></div>` +
-      `<div class="metric-card"><span>广告平均 ACOS</span><strong>${avgAcos ? `${avgAcos.toFixed(1)}%` : "-"}</strong></div>`;
+      `<div class="metric-card"><span>关键词数</span><strong>${rows.length}</strong><small>有广告数据 ${adSummary.keywordCount}</small></div>` +
+      `<div class="metric-card"><span>展示</span><strong>${compact(adSummary.impressions)}</strong><small>CTR ${kpiPct(adSummary.ctr)}</small></div>` +
+      `<div class="metric-card"><span>点击</span><strong>${compact(adSummary.clicks)}</strong><small>CPC ${adSummary.cpc == null ? "-" : `$${kpiMoney(adSummary.cpc)}`}</small></div>` +
+      `<div class="metric-card"><span>订单</span><strong>${compact(adSummary.orders)}</strong><small>CVR ${kpiPct(adSummary.cvr)}</small></div>` +
+      `<div class="metric-card"><span>花费 USD</span><strong>$${kpiMoney(adSummary.spend)}</strong><small>广告报表汇总</small></div>` +
+      `<div class="metric-card"><span>销售额 USD</span><strong>$${kpiMoney(adSummary.sales)}</strong><small>客单价 ${adSummary.aov == null ? "-" : `$${kpiMoney(adSummary.aov)}`}</small></div>` +
+      `<div class="metric-card"><span>整体 ACOS</span><strong>${kpiPct(adSummary.acos)}</strong><small>CVR ${kpiPct(adSummary.cvr)}</small></div>` +
+      `<div class="metric-card"><span>市场覆盖</span><strong>${compact(weeklyTotal)}</strong><small>平均难度 ${avgDifficulty}</small></div>`;
     hero.after(metrics);
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260816-local-rule-engine</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260816-kpi-summary</span>";
     metrics.after(title);
 
     const money = (value) => {
