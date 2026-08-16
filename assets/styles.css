@@ -403,10 +403,10 @@ select.is-confirmed {
 
 .task-card {
   display: grid;
-  grid-template-columns: 150px minmax(260px, 1fr) 96px 100px minmax(140px, 1fr) auto;
+  grid-template-columns: 150px minmax(520px, 1.35fr) 96px 100px minmax(120px, .65fr) auto;
   gap: 12px;
   align-items: center;
-  min-height: 72px;
+  min-height: 86px;
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -440,11 +440,44 @@ select.is-confirmed {
 }
 
 .task-product {
-  max-height: 78px;
-  overflow: auto;
+  display: grid;
+  gap: 7px;
+  overflow: visible;
   color: #344054;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.task-product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.task-product-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f3f6fa;
+  color: #475467;
+  white-space: nowrap;
+}
+
+.task-product-tags b {
+  color: #17324d;
+  font-weight: 700;
+}
+
+.task-product-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1f2933;
+  font-weight: 600;
 }
 
 .status-pill,

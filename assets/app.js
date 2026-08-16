@@ -242,16 +242,20 @@
   }
 
   function taskProductSummary(row) {
-    const parts = [
-      row.site ? `站点：${escapeHtml(row.site)}` : "",
-      row.store ? `店铺：${escapeHtml(row.store)}` : "",
-      row.report_date_range ? `报表日期：${escapeHtml(row.report_date_range)}` : "",
-      row.spu ? `SPU：${escapeHtml(row.spu)}` : "",
-      row.sku ? `SKU：${escapeHtml(row.sku)}` : "",
-      row.product_name ? `品名：${escapeHtml(row.product_name)}` : ""
-    ].filter(Boolean);
-    if (!parts.length) return "";
-    return `<div class="task-product">${parts.join("<br>")}</div>`;
+    const tags = [
+      row.site ? ["站点", row.site] : null,
+      row.store ? ["店铺", row.store] : null,
+      row.report_date_range ? ["报表", row.report_date_range] : null,
+      row.spu ? ["SPU", row.spu] : null,
+      row.sku ? ["SKU", row.sku] : null
+    ].filter(Boolean).map(([label, value]) => `
+      <span><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>
+    `).join("");
+    const productName = row.product_name
+      ? `<div class="task-product-name" title="${escapeHtml(row.product_name)}">${escapeHtml(row.product_name)}</div>`
+      : "";
+    if (!tags && !productName) return "";
+    return `<div class="task-product"><div class="task-product-tags">${tags}</div>${productName}</div>`;
   }
 
   async function setupProductSelectors(message) {
