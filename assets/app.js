@@ -790,11 +790,12 @@
           var oldMeta = oldHeader ? text(oldHeader.querySelector(".meta")) : "";
           var main = document.querySelector("main");
 
-          var adRows = rows.filter(function (row) { return text(row.cells[8]).indexOf("无投放") === -1; });
+          function sourceAdCell(row) { return row.cells.length >= 11 ? row.cells[9] : row.cells[8]; }
+          var adRows = rows.filter(function (row) { return text(sourceAdCell(row)).indexOf("无投放") === -1; });
           var weeklyTotal = rows.reduce(function (sum, row) { return sum + numberFrom(text(row.cells[2])); }, 0);
           var avgDifficulty = rows.length ? Math.round(rows.reduce(function (sum, row) { return sum + numberFrom(text(row.cells[4])); }, 0) / rows.length) : 0;
           var avgAcos = adRows.length ? adRows.reduce(function (sum, row) {
-            var match = text(row.cells[8]).match(/([0-9.]+)%\\s*$/);
+            var match = text(sourceAdCell(row)).match(/([0-9.]+)%\\s*$/);
             return sum + (match ? Number(match[1]) : 0);
           }, 0) / adRows.length : 0;
 
@@ -953,6 +954,9 @@
       .ad-main { display: block !important; font-size: 15px !important; line-height: 1.15 !important; font-weight: 800 !important; color: #172033 !important; white-space: nowrap; }
       .ad-sub { display: block !important; color: #667085 !important; font-size: 11px !important; line-height: 1.2 !important; margin-top: 0 !important; white-space: nowrap; }
       .ad-empty { color: #98a2b3; font-weight: 700; }
+      .ad-target-item { display: grid; gap: 2px; margin-bottom: 8px; line-height: 1.25; }
+      .ad-target-item strong { display: block; font-weight: 800; color: #172033; }
+      .ad-target-item span { display: block; color: #667085; font-size: 11px; }
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
@@ -1073,11 +1077,13 @@
 
     const oldTitle = oldHeader ? text(oldHeader.querySelector("h1")) : "关键词作战总表";
     const oldMeta = oldHeader ? text(oldHeader.querySelector(".meta")) : "";
-    const adRows = rows.filter((row) => text(row.cells[8]).indexOf("无投放") === -1);
+    const sourceAdCell = (row) => row.cells.length >= 11 ? row.cells[9] : row.cells[8];
+    const sourceAdviceCell = (row) => row.cells.length >= 11 ? row.cells[10] : row.cells[9];
+    const adRows = rows.filter((row) => text(sourceAdCell(row)).indexOf("无投放") === -1);
     const weeklyTotal = rows.reduce((sum, row) => sum + numberFrom(text(row.cells[2])), 0);
     const avgDifficulty = rows.length ? Math.round(rows.reduce((sum, row) => sum + numberFrom(text(row.cells[4])), 0) / rows.length) : 0;
       const avgAcos = adRows.length ? adRows.reduce((sum, row) => {
-        const match = text(row.cells[8]).match(/([0-9.]+)%\s*$/);
+        const match = text(sourceAdCell(row)).match(/([0-9.]+)%\s*$/);
         return sum + (match ? Number(match[1]) : 0);
       }, 0) / adRows.length : 0;
 
@@ -1091,7 +1097,7 @@
       missing: { label: "数据缺失", className: "cat-missing" },
     };
     const classifyRow = (row) => {
-      const advice = text(row.cells[9]);
+      const advice = text(sourceAdviceCell(row));
       if (/数据缺失/.test(advice)) return "missing";
       if (/暂停|止损|否定/.test(advice)) return "stop";
       if (/降价|复查|Listing|查图/.test(advice)) return "review";
@@ -1106,7 +1112,8 @@
       const category = classifyRow(row);
       row.dataset.category = category;
       counts[category] += 1;
-      const tag = row.cells[9] && row.cells[9].querySelector(".tag");
+      const adviceCell = sourceAdviceCell(row);
+      const tag = adviceCell && adviceCell.querySelector(".tag");
       if (tag) tag.classList.add(categoryMap[category].className);
     });
 
@@ -1157,7 +1164,7 @@
           const cpc = clicks ? spend / clicks : null;
           const cvr = clicks ? orders / clicks * 100 : null;
           const acos = sales ? spend / sales * 100 : (ad.acos != null ? Number(ad.acos) * (Number(ad.acos) <= 1 ? 100 : 1) : null);
-          return { hasData: true, impressions, clicks, spend, orders, sales, ctr, cpc, cvr, acos };
+          return { hasData: true, impressions, clicks, spend, orders, sales, ctr, cpc, cvr, acos, targets: Array.isArray(ad.targets) ? ad.targets : [] };
         } catch (_) {}
       }
       const raw = typeof input === "string" ? input : text(input);
@@ -1170,7 +1177,7 @@
       const cpc = clicks ? spend / clicks : null;
       const cvr = clicks ? orders / clicks * 100 : null;
       const sales = acos ? spend / (acos / 100) : null;
-      return { hasData: true, clicks, spend, orders, acos, cpc, cvr, sales };
+      return { hasData: true, clicks, spend, orders, acos, cpc, cvr, sales, targets: [] };
     };
     const parseBid = (raw) => {
       const clean = String(raw || "").replace(/\s+/g, " ");
@@ -1227,6 +1234,16 @@
       (sub ? `<span style="display:block!important;color:#667085!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap">${escapeHtml(sub)}</span>` : "") +
       `</div>`
     );
+    const adTargetsHtml = (ad, fallback = "") => {
+      const targets = ad && Array.isArray(ad.targets) ? ad.targets : [];
+      if (!targets.length && fallback) return fallback;
+      if (!targets.length) return '<span class="subtext">未记录</span>';
+      const shown = targets.slice(0, 3).map((item) => (
+        `<div class="ad-target-item"><strong>${escapeHtml(item.target || "未记录")}</strong><span>${escapeHtml(item.adType || "未记录")}</span></div>`
+      )).join("");
+      const more = targets.length > 3 ? `<div class="subtext">+${targets.length - 3} 个投放对象</div>` : "";
+      return shown + more;
+    };
 
     const actionPanel = doc.createElement("section");
     actionPanel.className = "action-panel";
@@ -1258,7 +1275,7 @@
         `<th class="group-market" colspan="5">${h("市场", "来自西柚关键词信息、ABA 趋势和市场转化字段，用来判断搜索热度、竞争强度、竞价和季节性。")}</th>` +
         `<th class="group-competition" colspan="1">${h("竞对", "来自西柚关键词下 ASIN 分析，展示该词点击前三 ASIN、主图和流量/自然位数据；“领跑”表示在点击前三里排除目标 ASIN 后，流量最高的竞对。")}</th>` +
         `<th class="group-self" colspan="1">${h("自身", "来自西柚关键词下目标 ASIN 与最强竞对的自然搜索位置对比，用来判断自己是否已经有自然位优势。")}</th>` +
-        `<th class="group-ad" colspan="6">${h("广告报表数据", "来自你上传的 SP 广告搜索词报表，按搜索词聚合展示、点击、订单、花费和销售额，并重算 CTR、CVR、CPC、ACOS。")}</th>` +
+        `<th class="group-ad" colspan="7">${h("广告报表数据", "来自你上传的广告搜索词报表，主关键词按真实搜索词聚合；投放词列展示触发该搜索词的投放对象和广告类型，其余列按搜索词汇总展示、点击、订单、花费和销售额，并重算 CTR、CVR、CPC、ACOS。")}</th>` +
         `<th rowspan="2">${h("打法建议", "由豆包按已确认的标签规则生成：守住放大、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰或数据缺失。")}</th>` +
         `</tr>` +
         `<tr>` +
@@ -1269,6 +1286,7 @@
         `<th>${h("季节性标注", "根据近 12 个月 ABA 趋势自动判断抬升、回落、平稳或波动，帮助识别淡旺季。")}</th>` +
         `<th>${h("点击前三ASIN", "来自西柚关键词 ASIN 分析，展示该词点击前三的 ASIN、主图、ASIN总流量和自然位。“领跑”是本工具标记的最强竞对：在点击前三中排除目标 ASIN 后，按西柚返回流量最高的非自己 ASIN 选出，用于判断谁在这个词下最值得对标。")}</th>` +
         `<th>${h("自己 vs 最强竞对自然位", "目标 ASIN 与最强竞对在该关键词自然搜索结果中的位置对比；按西柚返回的原始页码/位置展示，例如 P1·1 vs P1·4，显示“无”代表没有拿到自然位。")}</th>` +
+        `<th>${h("投放词/广告类型", "来自上传广告报表的投放列、广告活动、广告组和匹配类型。黑体为触发该搜索词的投放词/投放对象；下一行小字为广告类型，例如 SP-Manual、SP-Auto、SB-视频。一个搜索词命中多个投放对象时同格分条展示。")}</th>` +
         `<th>${h("展示", "来自上传广告报表的展示量，按搜索词汇总；表示广告被展示的次数。")}</th>` +
         `<th>${h("点击/CTR", "点击来自广告报表点击量；CTR=点击/展示，显示在底下小字，用来判断广告吸引点击能力。")}</th>` +
         `<th>${h("CPC", "由广告报表重算：CPC=花费/点击；用于判断当前点击成本是否偏高。")}</th>` +
@@ -1280,7 +1298,7 @@
     const oldColgroup = table.querySelector("colgroup");
     if (oldColgroup) oldColgroup.remove();
     const colgroup = doc.createElement("colgroup");
-    [190, 130, 240, 110, 130, 150, 155, 270, 95, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
+    [190, 130, 240, 110, 130, 150, 155, 270, 95, 170, 105, 125, 110, 125, 120, 155, 320].forEach((width) => {
       const col = doc.createElement("col");
       col.style.width = `${width}px`;
       col.dataset.defaultWidth = String(width);
@@ -1291,7 +1309,7 @@
       const firstRowSpans = thead.querySelectorAll("tr:first-child th[rowspan]");
       if (firstRowSpans[0]) firstRowSpans[0].dataset.colIndex = "0";
       if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "1";
-      if (firstRowSpans[2]) firstRowSpans[2].dataset.colIndex = "15";
+      if (firstRowSpans[2]) firstRowSpans[2].dataset.colIndex = "16";
       thead.querySelectorAll("tr:last-child th").forEach((th, index) => {
         th.dataset.colIndex = String(index + 2);
       });
@@ -1313,8 +1331,10 @@
       const bid = parseBid(text(original[5]));
       const selfRank = text(original[6]) || "-";
       const competitorHtml = htmlOf(original[7]) || "-";
-      const ad = parseAd(original[8]);
-      const adviceHtml = htmlOf(original[9]);
+      const hasTargetColumn = original.length >= 11;
+      const targetHtml = hasTargetColumn ? htmlOf(original[8]) : "";
+      const ad = parseAd(hasTargetColumn ? original[9] : original[8]);
+      const adviceHtml = htmlOf(hasTargetColumn ? original[10] : original[9]);
       const category = row.dataset.category || classifyRow(row);
       const season = seasonMeta(monthlyPoints.length ? monthlyPoints : abaPoints);
       const conversion = marketConversionMeta(original[2]);
@@ -1342,6 +1362,7 @@
         `<td>${seasonHtml}</td>` +
         `<td>${competitorHtml}</td>` +
         `<td>${escapeHtml(selfRank)}</td>` +
+        `<td>${adTargetsHtml(ad, targetHtml)}</td>` +
         `<td>${metric(ad.hasData && Number.isFinite(ad.impressions) && ad.impressions > 0 ? compact(ad.impressions) : "-")}</td>` +
         `<td>${adClickHtml}</td>` +
         `<td>${metric(ad.hasData && Number.isFinite(ad.cpc) && ad.cpc > 0 ? money(ad.cpc) : "-")}</td>` +
@@ -1349,7 +1370,7 @@
         `<td>${metric(ad.hasData && Number.isFinite(ad.spend) ? money(ad.spend) : "-")}</td>` +
         `<td>${adSalesHtml}</td>` +
         `<td>${adviceHtml}</td>`;
-      const tag = row.cells[14] && row.cells[14].querySelector(".tag");
+      const tag = row.cells[16] && row.cells[16].querySelector(".tag");
       if (tag) tag.classList.add(categoryMap[category].className);
     });
 
