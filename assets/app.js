@@ -954,9 +954,13 @@
       .ad-main { display: block !important; font-size: 15px !important; line-height: 1.15 !important; font-weight: 800 !important; color: #172033 !important; white-space: nowrap; }
       .ad-sub { display: block !important; color: #667085 !important; font-size: 11px !important; line-height: 1.2 !important; margin-top: 0 !important; white-space: nowrap; }
       .ad-empty { color: #98a2b3; font-weight: 700; }
-      .ad-target-item { display: grid; gap: 2px; margin-bottom: 8px; line-height: 1.25; }
+      .ad-target-list { display: grid; gap: 8px; align-content: start; }
+      .ad-target-item { display: grid; gap: 2px; line-height: 1.25; }
+      .ad-target-list:not(.is-expanded) .ad-target-item.is-extra { display: none; }
       .ad-target-item strong { display: block; font-weight: 800; color: #172033; }
       .ad-target-item span { display: block; color: #667085; font-size: 11px; }
+      .ad-target-toggle { justify-self: start; border: 0; background: #eef5ff; color: #175cd3; border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
+      .ad-target-toggle:hover { background: #dbeafe; }
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
@@ -1238,11 +1242,12 @@
       const targets = ad && Array.isArray(ad.targets) ? ad.targets : [];
       if (!targets.length && fallback) return fallback;
       if (!targets.length) return '<span class="subtext">未记录</span>';
-      const shown = targets.slice(0, 3).map((item) => (
-        `<div class="ad-target-item"><strong>${escapeHtml(item.target || "未记录")}</strong><span>${escapeHtml(item.adType || "未记录")}</span></div>`
+      const items = targets.map((item, index) => (
+        `<div class="ad-target-item${index >= 3 ? " is-extra" : ""}"><strong>${escapeHtml(item.target || "未记录")}</strong><span>${escapeHtml(item.adType || "未记录")}</span></div>`
       )).join("");
-      const more = targets.length > 3 ? `<div class="subtext">+${targets.length - 3} 个投放对象</div>` : "";
-      return shown + more;
+      const moreCount = targets.length - 3;
+      const toggle = moreCount > 0 ? `<button type="button" class="ad-target-toggle" data-ad-target-toggle data-more-count="${moreCount}" aria-expanded="false">+${moreCount} 个投放对象</button>` : "";
+      return `<div class="ad-target-list" data-ad-target-list>${items}${toggle}</div>`;
     };
 
     const actionPanel = doc.createElement("section");
@@ -1445,6 +1450,16 @@
         if (modal) modal.classList.remove('is-open');
       }
       document.addEventListener('click', function (event) {
+        var adTargetToggle = event.target.closest && event.target.closest('[data-ad-target-toggle]');
+        if (adTargetToggle) {
+          var list = adTargetToggle.closest('[data-ad-target-list]');
+          if (!list) return;
+          var expanded = list.classList.toggle('is-expanded');
+          adTargetToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          var count = adTargetToggle.getAttribute('data-more-count') || '0';
+          adTargetToggle.textContent = expanded ? '收起投放对象' : '+' + count + ' 个投放对象';
+          return;
+        }
         var trend = event.target.closest && event.target.closest('.trend-bars[data-aba-detail]');
         if (trend) {
           openAbaModal(trend);
