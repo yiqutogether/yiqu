@@ -899,6 +899,12 @@
       th { color: #17324d !important; background: #eef4fb !important; }
       .th-label { display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 12px); white-space: normal; line-height: 1.25; vertical-align: middle; }
       .th-help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9fb7d8; border-radius: 999px; color: #2f6fce; background: #fff; font-size: 10px; font-weight: 800; cursor: help; }
+      .sort-button { display: inline-grid; grid-template-rows: 8px 8px; align-items: center; justify-items: center; width: 17px; height: 22px; margin-left: 4px; padding: 2px; border: 1px solid #c9d8ec; border-radius: 4px; background: #fff; color: #9aa9bd; cursor: pointer; vertical-align: middle; }
+      .sort-button:hover { border-color: #7aa7e8; color: #2f6fce; }
+      .sort-button span { display: block; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; }
+      .sort-button .sort-up { border-bottom: 6px solid currentColor; }
+      .sort-button .sort-down { border-top: 6px solid currentColor; }
+      .sort-button.is-asc .sort-up, .sort-button.is-desc .sort-down { color: #2f6fce; }
       th[data-col-index] { user-select: none; }
       th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 6; }
       th .resize-handle::after { content: ""; position: absolute; top: 9px; bottom: 9px; right: 3px; width: 2px; border-radius: 2px; background: rgba(47, 111, 206, .28); }
@@ -1311,6 +1317,7 @@
     });
     table.insertBefore(colgroup, table.firstChild);
     if (thead) {
+      const sortableColumns = new Set([1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15]);
       const firstRowSpans = thead.querySelectorAll("tr:first-child th[rowspan]");
       if (firstRowSpans[0]) firstRowSpans[0].dataset.colIndex = "0";
       if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "1";
@@ -1319,6 +1326,11 @@
         th.dataset.colIndex = String(index + 2);
       });
       thead.querySelectorAll("th[data-col-index]").forEach((th) => {
+        const index = Number(th.dataset.colIndex);
+        if (sortableColumns.has(index)) {
+          th.dataset.sortable = "number";
+          th.insertAdjacentHTML("beforeend", '<button type="button" class="sort-button" data-sort-button title="点击按本列数值排序，默认从大到小" aria-label="按本列数值排序"><span class="sort-up"></span><span class="sort-down"></span></button>');
+        }
         th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
       });
     }
@@ -1429,6 +1441,33 @@
 
     const filterScript = doc.createElement("script");
     filterScript.textContent = `
+      function sortNumberFromCell(cell) {
+        if (!cell) return null;
+        var text = (cell.textContent || '').replace(/,/g, '').replace(/\\$/g, '');
+        var match = text.match(/-?\\d+(?:\\.\\d+)?/);
+        if (!match) return null;
+        var value = Number(match[0]);
+        return Number.isFinite(value) ? value : null;
+      }
+      function sortTableByColumn(th, direction) {
+        var index = Number(th.getAttribute('data-col-index'));
+        var table = th.closest('table');
+        var tbody = table && table.querySelector('tbody');
+        if (!tbody || !Number.isFinite(index)) return;
+        var rows = Array.from(tbody.querySelectorAll('tr')).map(function (row, order) {
+          return { row: row, order: order, value: sortNumberFromCell(row.cells[index]) };
+        });
+        rows.sort(function (a, b) {
+          var aHas = a.value !== null;
+          var bHas = b.value !== null;
+          if (!aHas && !bHas) return a.order - b.order;
+          if (!aHas) return 1;
+          if (!bHas) return -1;
+          if (a.value === b.value) return a.order - b.order;
+          return direction === 'asc' ? a.value - b.value : b.value - a.value;
+        });
+        rows.forEach(function (item) { tbody.appendChild(item.row); });
+      }
       function openAbaModal(trigger) {
         var modal = document.querySelector('.aba-modal-backdrop');
         if (!modal) return;
@@ -1450,6 +1489,22 @@
         if (modal) modal.classList.remove('is-open');
       }
       document.addEventListener('click', function (event) {
+        var sortButton = event.target.closest && event.target.closest('[data-sort-button]');
+        if (sortButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          var th = sortButton.closest('th[data-col-index]');
+          if (!th) return;
+          var nextDirection = sortButton.classList.contains('is-desc') ? 'asc' : 'desc';
+          document.querySelectorAll('[data-sort-button]').forEach(function (button) {
+            button.classList.remove('is-asc', 'is-desc');
+            button.setAttribute('aria-sort', 'none');
+          });
+          sortButton.classList.add(nextDirection === 'asc' ? 'is-asc' : 'is-desc');
+          sortButton.setAttribute('aria-sort', nextDirection === 'asc' ? 'ascending' : 'descending');
+          sortTableByColumn(th, nextDirection);
+          return;
+        }
         var adTargetToggle = event.target.closest && event.target.closest('[data-ad-target-toggle]');
         if (adTargetToggle) {
           var list = adTargetToggle.closest('[data-ad-target-list]');
