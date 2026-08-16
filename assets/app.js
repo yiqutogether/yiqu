@@ -1106,7 +1106,89 @@
       avoid: { label: "暂不硬碰", className: "cat-avoid" },
       missing: { label: "数据缺失", className: "cat-missing" },
     };
+    const isBrokenAdvice = (value) => /AccountOverdueError|HTTP\s*403|豆包|Doubao|Overdue|request failed|error|接口|401|403/i.test(String(value || ""));
+    const decodeCellValue = (value) => {
+      const textarea = doc.createElement("textarea");
+      textarea.innerHTML = String(value || "");
+      return textarea.value;
+    };
+    const parseAdForRules = (row) => {
+      const adCell = sourceAdCell(row);
+      const encoded = adCell && adCell.getAttribute ? (adCell.dataset.ad || adCell.getAttribute("data-ad") || "") : "";
+      if (encoded) {
+        try {
+          const data = JSON.parse(decodeCellValue(encoded));
+          const impressions = numberFrom(data.impressions);
+          const clicks = numberFrom(data.clicks);
+          const spend = numberFrom(data.spend);
+          const orders = numberFrom(data.orders);
+          const sales = numberFrom(data.sales);
+          const acosRaw = data.acos == null ? null : Number(data.acos);
+          const acos = sales ? spend / sales * 100 : (Number.isFinite(acosRaw) ? acosRaw * (acosRaw <= 1 ? 100 : 1) : null);
+          const cvr = clicks ? orders / clicks * 100 : null;
+          return { hasData: true, impressions, clicks, spend, orders, sales, acos, cvr };
+        } catch (_) {}
+      }
+      const raw = text(adCell);
+      if (!raw || /无投放/.test(raw)) return { hasData: false, clicks: 0, spend: 0, orders: 0, sales: 0, acos: null, cvr: null };
+      const parts = raw.split("/").map((part) => part.trim());
+      const clicks = numberFrom(parts[0]);
+      const spend = numberFrom(parts[1]);
+      const orders = numberFrom(parts[2]);
+      const acos = numberFrom(parts[3]);
+      const cvr = clicks ? orders / clicks * 100 : null;
+      return { hasData: true, clicks, spend, orders, acos, cvr };
+    };
+    const localAdviceForRow = (row) => {
+      const advice = text(sourceAdviceCell(row));
+      if (!isBrokenAdvice(advice)) return null;
+      const weekly = numberFrom(text(row.cells[2]));
+      const difficulty = numberFrom(text(row.cells[4]));
+      const ad = parseAdForRules(row);
+      const clicks = numberFrom(ad.clicks);
+      const orders = numberFrom(ad.orders);
+      const spend = numberFrom(ad.spend);
+      const acos = Number.isFinite(ad.acos) ? ad.acos : null;
+      const cvr = Number.isFinite(ad.cvr) ? ad.cvr : null;
+      const formatPct = (value) => `${Number(value).toFixed(1)}%`;
+      if (orders > 0 && acos !== null && acos <= 30) {
+        return { category: "guard", label: "守住放大", text: `守住放大：已有 ${compact(orders)} 单且 ACOS ${formatPct(acos)}≤30%，优先防守并放大。` };
+      }
+      if (orders > 0 && acos !== null && acos <= 45) {
+        return { category: "scale", label: "谨慎加码", text: `谨慎加码：已有 ${compact(orders)} 单但 ACOS ${formatPct(acos)} 在30%-45%，逐步加预算观察。` };
+      }
+      if (clicks >= 20 && orders === 0) {
+        return { category: "stop", label: "暂停止损", text: `暂停止损：已有 ${compact(clicks)} 次点击但 0 单，优先暂停或否定。` };
+      }
+      if (ad.hasData && spend > 0 && ((acos !== null && acos > 45) || (cvr !== null && cvr < 5))) {
+        const reason = acos !== null && acos > 45 ? `ACOS ${formatPct(acos)}>45%` : `CVR ${formatPct(cvr)}偏低`;
+        return { category: "review", label: "降价复查", text: `降价复查：该词有花费且${reason}，先降 CPC，并复查主图、Listing 和价格。` };
+      }
+      if (difficulty >= 85 && weekly >= 100000) {
+        return { category: "avoid", label: "暂不硬碰", text: `暂不硬碰：周搜索量 ${compact(weekly)} 且难度 ${difficulty}，先观望或拆长尾。` };
+      }
+      if (!ad.hasData && weekly > 0 && weekly < 100000 && difficulty < 85) {
+        return { category: "tail", label: "长尾测试", text: "长尾测试：搜索量中低且竞争未明显过强，暂无投放记录，可低价小预算测试。" };
+      }
+      if (ad.hasData && orders > 0) {
+        return { category: "scale", label: "谨慎加码", text: "谨慎加码：已有订单但效率未达到守住放大标准，先小幅加预算并观察 ACOS。" };
+      }
+      if (!ad.hasData) {
+        return { category: "tail", label: "长尾测试", text: "长尾测试：暂无历史投放，先用低价小预算验证相关性和转化。" };
+      }
+      return { category: "missing", label: "数据缺失", text: "数据缺失：当前数据不足以强判断，先补充市场或广告表现后再决策。" };
+    };
+    const localAdviceHtml = (advice) => {
+      if (!advice) return "";
+      const item = categoryMap[advice.category] || categoryMap.missing;
+      return `<span class="tag ${item.className}">${escapeHtml(advice.label)}</span> ${escapeHtml(advice.text.replace(`${advice.label}：`, ""))}`;
+    };
     const classifyRow = (row) => {
+      const local = localAdviceForRow(row);
+      if (local) {
+        row._localAdvice = local;
+        return local.category;
+      }
       const advice = text(sourceAdviceCell(row));
       if (/数据缺失/.test(advice)) return "missing";
       if (/暂停|止损|否定/.test(advice)) return "stop";
@@ -1287,7 +1369,7 @@
         `<th class="group-competition" colspan="1">${h("竞对", "来自西柚关键词下 ASIN 分析，展示该词点击前三 ASIN、主图和流量/自然位数据；“领跑”表示在点击前三里排除目标 ASIN 后，流量最高的竞对。")}</th>` +
         `<th class="group-self" colspan="1">${h("自身", "来自西柚关键词下目标 ASIN 与最强竞对的自然搜索位置对比，用来判断自己是否已经有自然位优势。")}</th>` +
         `<th class="group-ad" colspan="7">${h("广告报表数据", "来自你上传的广告搜索词报表，主关键词按真实搜索词聚合；投放词列展示触发该搜索词的投放对象和广告类型，其余列按搜索词汇总展示、点击、订单、花费和销售额，并重算 CTR、CVR、CPC、ACOS。")}</th>` +
-        `<th rowspan="2">${h("打法建议", "由豆包按已确认的标签规则生成：守住放大、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰或数据缺失。")}</th>` +
+        `<th rowspan="2">${h("打法建议", "优先按已确认的本地规则生成：守住放大、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰或数据缺失；豆包可作为后续增强，但接口欠费或失败时不会直接展示报错。")}</th>` +
         `</tr>` +
         `<tr>` +
         `<th>${h("搜索量 + ABA 12月", "最新周搜索量来自西柚 ABA 周搜索量；柱状图为近 52 周聚合成近 12 个月趋势，点击可看周日期区间、搜索量和 ABA 排名。")}</th>` +
@@ -1351,7 +1433,7 @@
       const hasTargetColumn = original.length >= 11;
       const targetHtml = hasTargetColumn ? htmlOf(original[8]) : "";
       const ad = parseAd(hasTargetColumn ? original[9] : original[8]);
-      const adviceHtml = htmlOf(hasTargetColumn ? original[10] : original[9]);
+      const adviceHtml = row._localAdvice ? localAdviceHtml(row._localAdvice) : htmlOf(hasTargetColumn ? original[10] : original[9]);
       const category = row.dataset.category || classifyRow(row);
       const season = seasonMeta(monthlyPoints.length ? monthlyPoints : abaPoints);
       const conversion = marketConversionMeta(original[2]);
