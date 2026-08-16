@@ -3,7 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
-    productMapUrl: "../assets/product-map.json?v=20260816-task-meta",
+    productMapUrl: "../assets/product-map.json?v=20260816-report-period",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -245,6 +245,7 @@
     const parts = [
       row.site ? `站点：${escapeHtml(row.site)}` : "",
       row.store ? `店铺：${escapeHtml(row.store)}` : "",
+      row.report_date_range ? `报表日期：${escapeHtml(row.report_date_range)}` : "",
       row.spu ? `SPU：${escapeHtml(row.spu)}` : "",
       row.sku ? `SKU：${escapeHtml(row.sku)}` : "",
       row.product_name ? `品名：${escapeHtml(row.product_name)}` : ""
@@ -586,7 +587,7 @@
     async function loadTasks() {
       try {
         const data = await supabaseFetch(
-          "/rest/v1/keyword_tasks?select=id,asin,status,failure_reason,report_url,created_at,completed_at,site,store,category_1,category_2,category_3,spu,sku,msku,product_name,task_note&order=created_at.desc&limit=100",
+          "/rest/v1/keyword_tasks?select=id,asin,status,failure_reason,report_url,created_at,completed_at,site,store,category_1,category_2,category_3,spu,sku,msku,product_name,task_note,report_start_date,report_end_date,report_date_range&order=created_at.desc&limit=100",
           { method: "GET" },
           true
         );
