@@ -373,7 +373,7 @@ select.is-confirmed {
 
 .task-card {
   display: grid;
-  grid-template-columns: 132px 110px 110px minmax(220px, 1fr) auto;
+  grid-template-columns: 150px minmax(260px, 1fr) 96px 100px minmax(140px, 1fr) auto;
   gap: 12px;
   align-items: center;
   min-height: 72px;
@@ -407,6 +407,14 @@ select.is-confirmed {
 .task-meta {
   color: var(--muted);
   font-size: 12px;
+}
+
+.task-product {
+  max-height: 78px;
+  overflow: auto;
+  color: #344054;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .status-pill,

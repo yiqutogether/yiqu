@@ -3,7 +3,7 @@
     supabaseUrl: "https://pltebbyumdjojipudwny.supabase.co",
     publishableKey: "sb_publishable_3Db-M-ZwCi5aeaMF0-BBhg_oAoxpLBK",
     inboxBucket: "keyword-tool-inbox",
-    productMapUrl: "../assets/product-map.json?v=20260815-autofill-state",
+    productMapUrl: "../assets/product-map.json?v=20260816-task-meta",
     maxUploadBytes: 20 * 1024 * 1024
   };
 
@@ -225,6 +225,32 @@
       row.asin ? `ASIN：${escapeHtml(row.asin)}` : ""
     ].filter(Boolean);
     return chunks.join("<br>");
+  }
+
+  function taskProductPayload(row) {
+    return {
+      site: normalizeProductValue(row.countryCode),
+      store: normalizeProductValue(row.store),
+      category_1: normalizeProductValue(row.category1),
+      category_2: normalizeProductValue(row.category2),
+      category_3: normalizeProductValue(row.category3),
+      spu: normalizeProductValue(row.spu),
+      sku: normalizeProductValue(row.sku),
+      msku: normalizeProductValue(row.msku),
+      product_name: normalizeProductValue(row.productName)
+    };
+  }
+
+  function taskProductSummary(row) {
+    const parts = [
+      row.site ? `站点：${escapeHtml(row.site)}` : "",
+      row.store ? `店铺：${escapeHtml(row.store)}` : "",
+      row.spu ? `SPU：${escapeHtml(row.spu)}` : "",
+      row.sku ? `SKU：${escapeHtml(row.sku)}` : "",
+      row.product_name ? `品名：${escapeHtml(row.product_name)}` : ""
+    ].filter(Boolean);
+    if (!parts.length) return "";
+    return `<div class="task-product">${parts.join("<br>")}</div>`;
   }
 
   async function setupProductSelectors(message) {
@@ -538,7 +564,8 @@
             id: taskId,
             user_id: user.id,
             asin,
-            upload_path: uploadPath
+            upload_path: uploadPath,
+            ...taskProductPayload(selectedProduct)
           })
         }, true);
 
@@ -559,7 +586,7 @@
     async function loadTasks() {
       try {
         const data = await supabaseFetch(
-          "/rest/v1/keyword_tasks?select=id,asin,status,failure_reason,report_url,created_at,completed_at&order=created_at.desc&limit=100",
+          "/rest/v1/keyword_tasks?select=id,asin,status,failure_reason,report_url,created_at,completed_at,site,store,category_1,category_2,category_3,spu,sku,msku,product_name,task_note&order=created_at.desc&limit=100",
           { method: "GET" },
           true
         );
@@ -578,13 +605,16 @@
         const statusClass = taskStatusClass[row.status] || "status-pending";
         const createdAt = row.created_at ? new Date(row.created_at).toLocaleString("zh-CN") : "-";
         const failure = row.status === "失败" && row.failure_reason ? `<div class="task-meta">${escapeHtml(row.failure_reason)}</div>` : "";
-        const label = taskDisplayLabels[row.id] ? `<span class="task-label">${escapeHtml(taskDisplayLabels[row.id])}</span>` : "";
+        const labelText = row.task_note || taskDisplayLabels[row.id] || "";
+        const label = labelText ? `<span class="task-label">${escapeHtml(labelText)}</span>` : "";
+        const product = taskProductSummary(row);
         const report = row.status === "已完成" && row.report_url
           ? `<a class="ghost-button" href="../report/?task=${encodeURIComponent(row.id)}">查看报告</a>`
           : "";
         return `
           <article class="task-card">
             <div><strong>${escapeHtml(row.asin)}${label}</strong><span class="task-meta">${createdAt}</span></div>
+            ${product || '<div class="task-meta">产品信息<br>未记录</div>'}
             <div><span class="status-pill ${statusClass}">${escapeHtml(row.status)}</span></div>
             <div class="task-meta">任务号<br>${escapeHtml(row.id.slice(0, 8))}</div>
             <div>${failure}</div>
