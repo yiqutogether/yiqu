@@ -1318,13 +1318,13 @@
       `<div class="metric-card"><span>订单</span><strong>${compact(adSummary.orders)}</strong><small>CVR ${kpiPct(adSummary.cvr)}</small></div>` +
       `<div class="metric-card"><span>花费 USD</span><strong>$${kpiMoney(adSummary.spend)}</strong><small>广告报表汇总</small></div>` +
       `<div class="metric-card"><span>销售额 USD</span><strong>$${kpiMoney(adSummary.sales)}</strong><small>客单价 ${adSummary.aov == null ? "-" : `$${kpiMoney(adSummary.aov)}`}</small></div>` +
-      `<div class="metric-card"><span>整体 ACOS</span><strong>${kpiPct(adSummary.acos)}</strong><small>CVR ${kpiPct(adSummary.cvr)}</small></div>` +
-      `<div class="metric-card"><span>市场覆盖</span><strong>${compact(weeklyTotal)}</strong><small>平均难度 ${avgDifficulty}</small></div>`;
+      `<div class="metric-card"><span>整体 ACOS</span><strong>${kpiPct(adSummary.acos)}</strong><small>广告花费 / 广告销售额</small></div>` +
+      `<div class="metric-card"><span>合计周搜索量</span><strong>${compact(weeklyTotal)}</strong><small>入表关键词覆盖 · 平均难度 ${avgDifficulty}</small></div>`;
     hero.after(metrics);
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260816-kpi-summary</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260816-kpi-copy</span>";
     metrics.after(title);
 
     const money = (value) => {
