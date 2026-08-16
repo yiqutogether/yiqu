@@ -883,12 +883,15 @@
       .filter-button { cursor: pointer; }
       .filter-button.is-active { border-color: #172033; box-shadow: inset 0 0 0 2px #172033; }
       .dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; }
+      .cat-profit { color: #00806b; background: #e7fbf5; }
       .cat-guard { color: #1677ff; background: #edf5ff; }
+      .cat-hold { color: #0f5fbf; background: #eaf3ff; }
       .cat-scale { color: #12a150; background: #ebf8f0; }
       .cat-review { color: #d99000; background: #fff7e5; }
       .cat-stop { color: #dc2626; background: #fff1f1; }
       .cat-tail { color: #7a4cc2; background: #f4f0ff; }
       .cat-avoid { color: #667085; background: #f1f3f6; }
+      .cat-season { color: #b45309; background: #fff3d6; }
       .cat-missing { color: #475467; background: #eef2f6; }
       .rule-note { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 6px 16px; color: #667085; font-size: 13px; line-height: 1.6; padding: 12px 14px; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; }
       .rule-note div { min-width: 0; }
@@ -941,12 +944,15 @@
       .keyword-tags { display: flex; flex-wrap: wrap; gap: 5px; }
       .keyword-chip, .season-chip, .conversion-chip, .difficulty-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
       .keyword-chip { background: #eef5ff; color: #175cd3; }
+      .keyword-chip.cat-profit { color: #00806b; background: #e7fbf5; }
       .keyword-chip.cat-guard { color: #1677ff; background: #edf5ff; }
+      .keyword-chip.cat-hold { color: #0f5fbf; background: #eaf3ff; }
       .keyword-chip.cat-scale { color: #12a150; background: #ebf8f0; }
       .keyword-chip.cat-review { color: #d99000; background: #fff7e5; }
       .keyword-chip.cat-stop { color: #dc2626; background: #fff1f1; }
       .keyword-chip.cat-tail { color: #7a4cc2; background: #f4f0ff; }
       .keyword-chip.cat-avoid { color: #667085; background: #f1f3f6; }
+      .keyword-chip.cat-season { color: #b45309; background: #fff3d6; }
       .keyword-chip.cat-missing { color: #475467; background: #eef2f6; }
       .conversion-chip { background: #eaf7f1; color: #0f8f61; }
       .conversion-chip.pending { background: #eef2f6; color: #475467; }
@@ -971,12 +977,15 @@
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
       .tag { border-radius: 999px !important; padding: 3px 8px !important; }
+      .tag.cat-profit { color: #00806b !important; background: #e7fbf5 !important; }
       .tag.cat-guard { color: #1677ff !important; background: #edf5ff !important; }
+      .tag.cat-hold { color: #0f5fbf !important; background: #eaf3ff !important; }
       .tag.cat-scale { color: #12a150 !important; background: #ebf8f0 !important; }
       .tag.cat-review { color: #d99000 !important; background: #fff7e5 !important; }
       .tag.cat-stop { color: #dc2626 !important; background: #fff1f1 !important; }
       .tag.cat-tail { color: #7a4cc2 !important; background: #f4f0ff !important; }
       .tag.cat-avoid { color: #667085 !important; background: #f1f3f6 !important; }
+      .tag.cat-season { color: #b45309 !important; background: #fff3d6 !important; }
       .tag.cat-missing { color: #475467 !important; background: #eef2f6 !important; }
     `;
     doc.head.appendChild(style);
@@ -1098,19 +1107,48 @@
       }, 0) / adRows.length : 0;
 
     const categoryMap = {
+      profit: { label: "利润放大", className: "cat-profit" },
       guard: { label: "守住放大", className: "cat-guard" },
+      hold: { label: "守住不加价", className: "cat-hold" },
       scale: { label: "谨慎加码", className: "cat-scale" },
       review: { label: "降价复查", className: "cat-review" },
       stop: { label: "暂停止损", className: "cat-stop" },
       tail: { label: "长尾测试", className: "cat-tail" },
       avoid: { label: "暂不硬碰", className: "cat-avoid" },
+      season: { label: "季节布局", className: "cat-season" },
       missing: { label: "数据缺失", className: "cat-missing" },
     };
-    const isBrokenAdvice = (value) => /AccountOverdueError|HTTP\s*403|豆包|Doubao|Overdue|request failed|error|接口|401|403/i.test(String(value || ""));
     const decodeCellValue = (value) => {
       const textarea = doc.createElement("textarea");
       textarea.innerHTML = String(value || "");
       return textarea.value;
+    };
+    const bidNumbersFromText = (value) => {
+      const nums = String(value || "").match(/[0-9]+(?:\.[0-9]+)?/g) || [];
+      return nums.map(Number).filter(Number.isFinite);
+    };
+    const selfRankNumber = (value) => {
+      const raw = String(value || "");
+      if (/^\s*无/.test(raw)) return null;
+      const pagePos = raw.match(/P\s*(\d+)\s*[·.\-:]\s*(\d+)/i);
+      if (pagePos) return (Number(pagePos[1]) - 1) * 48 + Number(pagePos[2]);
+      const plain = raw.match(/\d+/);
+      return plain ? Number(plain[0]) : null;
+    };
+    const trendDirectionForRow = (row) => {
+      const fallbackParts = parseTrend(text(row.cells[3]));
+      const weeklyPoints = trendPoints(row.cells[3], fallbackParts);
+      const points = monthlyTrendPoints(row.cells[3], weeklyPoints);
+      const values = (points.length ? points : weeklyPoints).map((item) => Number(item.value || 0)).filter((n) => n > 0);
+      if (values.length < 2) return "flat";
+      const first = values[0];
+      const last = values[values.length - 1];
+      const avg = values.reduce((sum, n) => sum + n, 0) / values.length;
+      const range = Math.max(...values) - Math.min(...values);
+      if (first && (last - first) / first > 0.15) return "up";
+      if (first && (last - first) / first < -0.15) return "down";
+      if (avg && range / avg > 0.35) return "volatile";
+      return "flat";
     };
     const parseAdForRules = (row) => {
       const adCell = sourceAdCell(row);
@@ -1126,46 +1164,80 @@
           const acosRaw = data.acos == null ? null : Number(data.acos);
           const acos = sales ? spend / sales * 100 : (Number.isFinite(acosRaw) ? acosRaw * (acosRaw <= 1 ? 100 : 1) : null);
           const cvr = clicks ? orders / clicks * 100 : null;
-          return { hasData: true, impressions, clicks, spend, orders, sales, acos, cvr };
+          const ctr = impressions ? clicks / impressions * 100 : null;
+          return { hasData: true, impressions, clicks, spend, orders, sales, acos, cvr, ctr, targets: Array.isArray(data.targets) ? data.targets : [] };
         } catch (_) {}
       }
       const raw = text(adCell);
-      if (!raw || /无投放/.test(raw)) return { hasData: false, clicks: 0, spend: 0, orders: 0, sales: 0, acos: null, cvr: null };
+      if (!raw || /无投放/.test(raw)) return { hasData: false, impressions: 0, clicks: 0, spend: 0, orders: 0, sales: 0, acos: null, cvr: null, ctr: null, targets: [] };
       const parts = raw.split("/").map((part) => part.trim());
       const clicks = numberFrom(parts[0]);
       const spend = numberFrom(parts[1]);
       const orders = numberFrom(parts[2]);
       const acos = numberFrom(parts[3]);
       const cvr = clicks ? orders / clicks * 100 : null;
-      return { hasData: true, clicks, spend, orders, acos, cvr };
+      return { hasData: true, impressions: 0, clicks, spend, orders, acos, cvr, ctr: null, targets: [] };
     };
     const localAdviceForRow = (row) => {
-      const advice = text(sourceAdviceCell(row));
-      if (!isBrokenAdvice(advice)) return null;
       const weekly = numberFrom(text(row.cells[2]));
       const difficulty = numberFrom(text(row.cells[4]));
+      const bidNumbers = bidNumbersFromText(text(row.cells[5]));
+      const bidHigh = bidNumbers.length ? Math.max(...bidNumbers) : null;
       const ad = parseAdForRules(row);
+      const rank = selfRankNumber(text(row.cells[6]));
+      const trendDirection = trendDirectionForRow(row);
       const clicks = numberFrom(ad.clicks);
+      const impressions = numberFrom(ad.impressions);
       const orders = numberFrom(ad.orders);
       const spend = numberFrom(ad.spend);
       const acos = Number.isFinite(ad.acos) ? ad.acos : null;
       const cvr = Number.isFinite(ad.cvr) ? ad.cvr : null;
+      const ctr = Number.isFinite(ad.ctr) ? ad.ctr : null;
+      const cpc = clicks ? spend / clicks : null;
+      const selfStrong = rank !== null && rank <= 5;
+      const nearBidHigh = bidHigh !== null && cpc !== null && cpc >= bidHigh * 0.9;
+      const hasMarketData = weekly > 0 || difficulty > 0;
+      const targetCount = Array.isArray(ad.targets) ? ad.targets.length : 0;
       const formatPct = (value) => `${Number(value).toFixed(1)}%`;
+      if (!hasMarketData && !ad.hasData) {
+        return { category: "missing", label: "数据缺失", text: "数据缺失：西柚或广告报表关键字段不足，先补数再判断。" };
+      }
+      if ((clicks >= 20 && orders === 0) || (ad.hasData && spend >= 50 && orders === 0)) {
+        return { category: "stop", label: "暂停止损", text: `暂停止损：已有 ${compact(clicks)} 次点击但 0 单，优先暂停或否定，避免继续烧钱。` };
+      }
+      if (impressions >= 1000 && ctr !== null && ctr < 0.3) {
+        return { category: "review", label: "降价复查", text: `降价复查：展示 ${compact(impressions)} 但 CTR ${formatPct(ctr)}<0.3%，先查主图、标题、价格和广告相关性。` };
+      }
+      if (ad.hasData && spend > 0 && ((acos !== null && acos > 45) || (cvr !== null && cvr < 5))) {
+        const reason = acos !== null && acos > 45 ? `ACOS ${formatPct(acos)}>45%` : `CVR ${formatPct(cvr)}偏低`;
+        return { category: "review", label: "降价复查", text: `降价复查：该词有花费且${reason}，先降 CPC，并复查主图、Listing 和价格。` };
+      }
+      if (orders > 0 && acos !== null && acos <= 25 && cvr !== null && cvr >= 15 && clicks >= 10) {
+        return { category: "profit", label: "利润放大", text: `利润放大：已有 ${compact(orders)} 单，ACOS ${formatPct(acos)}≤25% 且 CVR ${formatPct(cvr)}，优先提高预算并强化精准投放。` };
+      }
+      if (orders > 0 && acos !== null && acos <= 30 && selfStrong && nearBidHigh) {
+        return { category: "hold", label: "守住不加价", text: `守住不加价：ACOS ${formatPct(acos)} 可接受且自然位靠前，CPC 已接近建议上限，先稳预算不盲目提价。` };
+      }
       if (orders > 0 && acos !== null && acos <= 30) {
         return { category: "guard", label: "守住放大", text: `守住放大：已有 ${compact(orders)} 单且 ACOS ${formatPct(acos)}≤30%，优先防守并放大。` };
       }
       if (orders > 0 && acos !== null && acos <= 45) {
         return { category: "scale", label: "谨慎加码", text: `谨慎加码：已有 ${compact(orders)} 单但 ACOS ${formatPct(acos)} 在30%-45%，逐步加预算观察。` };
       }
-      if (clicks >= 20 && orders === 0) {
-        return { category: "stop", label: "暂停止损", text: `暂停止损：已有 ${compact(clicks)} 次点击但 0 单，优先暂停或否定。` };
-      }
-      if (ad.hasData && spend > 0 && ((acos !== null && acos > 45) || (cvr !== null && cvr < 5))) {
-        const reason = acos !== null && acos > 45 ? `ACOS ${formatPct(acos)}>45%` : `CVR ${formatPct(cvr)}偏低`;
-        return { category: "review", label: "降价复查", text: `降价复查：该词有花费且${reason}，先降 CPC，并复查主图、Listing 和价格。` };
+      if (orders > 0 && targetCount > 1) {
+        return { category: "scale", label: "谨慎加码", text: `谨慎加码：该搜索词已出单但由 ${targetCount} 个投放对象触发，先保留效率最高对象，弱项降价或否定，避免内耗。` };
       }
       if (difficulty >= 85 && weekly >= 100000) {
         return { category: "avoid", label: "暂不硬碰", text: `暂不硬碰：周搜索量 ${compact(weekly)} 且难度 ${difficulty}，先观望或拆长尾。` };
+      }
+      if (trendDirection === "up" && ((orders > 0 && (acos === null || acos <= 45)) || (!ad.hasData && weekly >= 30000 && difficulty < 85))) {
+        return { category: "season", label: "季节布局", text: "季节布局：ABA 12个月趋势抬升，且当前广告表现或竞争条件可接受，提前加预算或补 Exact 词。" };
+      }
+      if (trendDirection === "down" && ad.hasData && spend > 0) {
+        return { category: "review", label: "降价复查", text: "降价复查：ABA 12个月趋势回落但广告仍有花费，建议降预算、保核心词、收泛词。" };
+      }
+      if (!ad.hasData && weekly >= 30000 && difficulty < 85) {
+        return { category: "tail", label: "长尾测试", text: "长尾测试：搜索量中高且难度未明显过强，广告报表无投放记录，可低价 Exact 或 Phrase 小预算试投。" };
       }
       if (!ad.hasData && weekly > 0 && weekly < 100000 && difficulty < 85) {
         return { category: "tail", label: "长尾测试", text: "长尾测试：搜索量中低且竞争未明显过强，暂无投放记录，可低价小预算测试。" };
@@ -1199,14 +1271,18 @@
       if (/守住|放大|防守/.test(advice)) return "guard";
       return "missing";
     };
-    const counts = { all: rows.length, guard: 0, scale: 0, review: 0, stop: 0, tail: 0, avoid: 0, missing: 0 };
+    const counts = { all: rows.length };
+    Object.keys(categoryMap).forEach((key) => {
+      counts[key] = 0;
+    });
     rows.forEach((row) => {
       const category = classifyRow(row);
       row.dataset.category = category;
-      counts[category] += 1;
+      counts[category] = (counts[category] || 0) + 1;
       const adviceCell = sourceAdviceCell(row);
       const tag = adviceCell && adviceCell.querySelector(".tag");
-      if (tag) tag.classList.add(categoryMap[category].className);
+      const categoryItem = categoryMap[category] || categoryMap.missing;
+      if (tag) tag.classList.add(categoryItem.className);
     });
 
     const hero = doc.createElement("section");
@@ -1226,7 +1302,7 @@
 
     const title = doc.createElement("div");
     title.className = "table-title";
-    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260814-aba-12m</span>";
+    title.innerHTML = "<h2>关键词数据</h2><span>市场、竞对、自身、广告和打法合并扫表 · 前台版本 20260816-local-rule-engine</span>";
     metrics.after(title);
 
     const money = (value) => {
@@ -1309,7 +1385,8 @@
       return { label: "待接入", sub: "需要西柚市场转化字段" };
     };
     const keywordTags = (keyword, category, weekly, difficulty, ad) => {
-      const tags = [{ label: categoryMap[category].label, className: categoryMap[category].className }];
+      const categoryItem = categoryMap[category] || categoryMap.missing;
+      const tags = [{ label: categoryItem.label, className: categoryItem.className }];
       if (weekly >= 100000) tags.push("高搜索");
       else if (weekly >= 30000) tags.push("中高搜索");
       else tags.push("长尾池");
@@ -1347,12 +1424,15 @@
         ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
       </div>
       <div class="rule-note">
-        <div><strong>守住放大</strong>：有订单且 ACOS ≤ 30%，自然位或广告位表现不差，优先防守并放大。</div>
-        <div><strong>谨慎加码</strong>：有订单但 30% &lt; ACOS ≤ 45%，或竞争强但仍有转化，逐步加预算。</div>
-        <div><strong>降价复查</strong>：点击多、有花费，且 ACOS &gt; 45% 或转化偏低，先降 CPC、查主图、Listing 和价格。</div>
-        <div><strong>暂停止损</strong>：点击 ≥ 20 且 0 单，或花费明显超过可接受获客成本仍无单，优先暂停/否定。</div>
-        <div><strong>长尾测试</strong>：搜索量中低、竞争不强、相关性高、无明显历史投放，低价小预算测试。</div>
-        <div><strong>暂不硬碰</strong>：周搜索量高但难度 ≥ 85，且点击前三垄断或自己自然位弱，先观望或拆长尾。</div>
+        <div><strong>利润放大</strong>：有订单，ACOS ≤ 25%，CVR ≥ 15%，且点击量足够，优先加预算、加精准词。</div>
+        <div><strong>守住放大</strong>：有订单且 ACOS ≤ 30%，表现健康，优先防守核心位置并放大。</div>
+        <div><strong>守住不加价</strong>：ACOS ≤ 30%，自然位靠前，且 CPC 已接近建议竞价上限，稳预算不盲目提价。</div>
+        <div><strong>谨慎加码</strong>：有订单但 30% &lt; ACOS ≤ 45%，或多投放对象内耗，逐步加预算并整理投放对象。</div>
+        <div><strong>降价复查</strong>：CTR &lt; 0.3%、ACOS &gt; 45%、CVR &lt; 5%，或趋势回落仍在花费，先降 CPC、查图、Listing 和价格。</div>
+        <div><strong>暂停止损</strong>：点击 ≥ 20 且 0 单，或花费 ≥ $50 仍 0 单，优先暂停或否定。</div>
+        <div><strong>长尾测试</strong>：暂无投放记录，搜索量可用且难度不高，低价 Exact/Phrase 小预算验证。</div>
+        <div><strong>暂不硬碰</strong>：周搜索量高且难度 ≥ 85，先观望或拆长尾，避免硬冲头部词。</div>
+        <div><strong>季节布局</strong>：ABA 12个月趋势抬升，且竞争或广告表现可接受，提前补词或加预算。</div>
         <div><strong>数据缺失</strong>：西柚或广告报表关键字段缺失，不做强判断，先补数再判断。</div>
       </div>
     `;
@@ -1369,7 +1449,7 @@
         `<th class="group-competition" colspan="1">${h("竞对", "来自西柚关键词下 ASIN 分析，展示该词点击前三 ASIN、主图和流量/自然位数据；“领跑”表示在点击前三里排除目标 ASIN 后，流量最高的竞对。")}</th>` +
         `<th class="group-self" colspan="1">${h("自身", "来自西柚关键词下目标 ASIN 与最强竞对的自然搜索位置对比，用来判断自己是否已经有自然位优势。")}</th>` +
         `<th class="group-ad" colspan="7">${h("广告报表数据", "来自你上传的广告搜索词报表，主关键词按真实搜索词聚合；投放词列展示触发该搜索词的投放对象和广告类型，其余列按搜索词汇总展示、点击、订单、花费和销售额，并重算 CTR、CVR、CPC、ACOS。")}</th>` +
-        `<th rowspan="2">${h("打法建议", "优先按已确认的本地规则生成：守住放大、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰或数据缺失；豆包可作为后续增强，但接口欠费或失败时不会直接展示报错。")}</th>` +
+        `<th rowspan="2">${h("打法建议", "优先按已确认的本地规则生成：利润放大、守住放大、守住不加价、谨慎加码、降价复查、暂停止损、长尾测试、暂不硬碰、季节布局或数据缺失；豆包可作为后续增强，但接口欠费或失败时不会直接展示报错。")}</th>` +
         `</tr>` +
         `<tr>` +
         `<th>${h("搜索量 + ABA 12月", "最新周搜索量来自西柚 ABA 周搜索量；柱状图为近 52 周聚合成近 12 个月趋势，点击可看周日期区间、搜索量和 ABA 排名。")}</th>` +
@@ -1470,7 +1550,8 @@
         `<td>${adSalesHtml}</td>` +
         `<td>${adviceHtml}</td>`;
       const tag = row.cells[16] && row.cells[16].querySelector(".tag");
-      if (tag) tag.classList.add(categoryMap[category].className);
+      const categoryItem = categoryMap[category] || categoryMap.missing;
+      if (tag) tag.classList.add(categoryItem.className);
     });
 
     doc.querySelectorAll(".asin").forEach((node) => {
