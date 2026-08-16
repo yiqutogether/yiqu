@@ -704,8 +704,8 @@
         th { color: #17324d !important; background: #eef4fb !important; }
         tbody tr:nth-child(even) td { background: #fbfdff; }
         tbody tr:hover td { background: #f6fbff; }
-        tbody td:nth-child(1), thead tr:first-child th:first-child { width: 180px; position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
-        thead tr:first-child th:first-child { z-index: 4; background: #e9f0f8 !important; }
+        tbody td:nth-child(1), thead tr:first-child th:first-child { width: 180px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+        thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
         th:nth-child(4), td:nth-child(4) { width: 170px !important; }
         th:nth-child(8), td:nth-child(8) { width: 250px !important; }
         th:nth-child(10), td:nth-child(10) { width: 270px !important; }
@@ -900,13 +900,13 @@
       .th-label { display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 12px); white-space: normal; line-height: 1.25; vertical-align: middle; }
       .th-help { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid #9fb7d8; border-radius: 999px; color: #2f6fce; background: #fff; font-size: 10px; font-weight: 800; cursor: help; }
       th[data-col-index] { user-select: none; }
-      th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 8; }
+      th .resize-handle { position: absolute; top: 0; right: 0; width: 10px; height: 100%; cursor: col-resize; z-index: 6; }
       th .resize-handle::after { content: ""; position: absolute; top: 9px; bottom: 9px; right: 3px; width: 2px; border-radius: 2px; background: rgba(47, 111, 206, .28); }
       th .resize-handle:hover::after, th .resize-handle.is-dragging::after { right: 2px; width: 4px; background: #2f6fce; }
       tbody tr:nth-child(even) td { background: #fbfdff; }
       tbody tr:hover td { background: #f6fbff; }
-      tbody td:nth-child(1), thead tr:first-child th:first-child { width: 180px; position: sticky; left: 0; z-index: 2; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
-      thead tr:first-child th:first-child { z-index: 4; background: #e9f0f8 !important; }
+      tbody td:nth-child(1), thead tr:first-child th:first-child { width: 180px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+      thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
       td:nth-child(6), td:nth-child(7), td:nth-child(15) { line-height: 1.45; }
       .group-row th { text-align: center !important; font-weight: 700; border-bottom: 1px solid #cad6e3 !important; }
       .group-market { background: #eaf7f2 !important; color: #006b55 !important; }
