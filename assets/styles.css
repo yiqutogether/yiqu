@@ -297,6 +297,35 @@ select.is-confirmed {
 
 .submit-panel .form-stack {
   gap: 11px;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.submit-panel .form-stack::-webkit-scrollbar {
+  width: 8px;
+}
+
+.submit-panel .form-stack::-webkit-scrollbar-thumb {
+  background: #c9d4e2;
+  border-radius: 999px;
+}
+
+.submit-task-button,
+#submit-task {
+  order: 20;
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  width: 100%;
+  min-height: 42px;
+  box-shadow: 0 -8px 18px rgba(248, 250, 252, 0.92);
+}
+
+#task-message {
+  order: 21;
 }
 
 .field-grid {
@@ -325,6 +354,7 @@ select.is-confirmed {
 }
 
 .usage-note {
+  order: 30;
   padding: 10px 11px;
   border: 1px solid #d9e7f7;
   border-radius: 6px;
