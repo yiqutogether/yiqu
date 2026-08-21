@@ -1011,6 +1011,12 @@
       .organic-hero h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
       .organic-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
       .organic-note { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #d9e1ea; border-radius: 8px; background: #eaf7f1; color: #17324d; font-size: 13px; line-height: 1.6; }
+      .organic-action-panel { margin: 14px 0 18px; }
+      .organic-filter-note { margin-top: -6px; }
+      .organic-filter-note strong { color: #56647a; }
+      .organic-chip-lead { color: #00806b; background: #e7fbf5; }
+      .organic-chip-lag { color: #dc2626; background: #fff1f1; }
+      .organic-chip-none, .organic-chip-missing { color: #475467; background: #eef2f6; }
       .organic-rich-table { min-width: 1700px !important; }
       .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
       .organic-rich-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
@@ -1644,6 +1650,68 @@
           const firstCell = row.cells && row.cells[0];
           if (row.cells.length === 8 && /^\d+$/.test(text(firstCell))) firstCell.remove();
         });
+        const parseOrganicRankText = (value) => {
+          const raw = String(value || "");
+          if (!raw || /--|未上榜|无自然位/.test(raw)) return null;
+          const rankMatch = raw.match(/P\s*(\d+)\s*[·.\-]\s*(\d+)/i);
+          if (rankMatch) {
+            const page = Number(rankMatch[1]);
+            const position = Number(rankMatch[2]);
+            const rankValue = (page - 1) * 48 + position;
+            return Number.isFinite(rankValue) ? rankValue : null;
+          }
+          const organicMatch = raw.match(/自然位[^0-9-]*(\d+)/);
+          if (organicMatch) {
+            const rankValue = Number(organicMatch[1]);
+            return Number.isFinite(rankValue) ? rankValue : null;
+          }
+          return null;
+        };
+        const organicCategoryMap = {
+          lead: { label: "自然位领先", className: "organic-chip-lead", note: "自己自然位 ≤ 头部标杆自然位，说明我们在该关键词自然搜索里不弱于头部。" },
+          lag: { label: "自然位落后", className: "organic-chip-lag", note: "自己自然位 > 头部标杆自然位，说明我们仍落后头部，需要看主图、价格、Listing 和广告协同。" },
+          none: { label: "未进自然位", className: "organic-chip-none", note: "头部有自然位，但自己没有拿到自然位，优先判断是否值得通过广告和内容补位。" },
+          missing: { label: "数据缺失", className: "organic-chip-missing", note: "自己或头部标杆缺少自然位关键字段，不做强判断，先等留底数据补齐。" }
+        };
+        const classifyOrganicRow = (row) => {
+          const cells = Array.from(row.cells || []);
+          const ownRank = parseOrganicRankText(text(cells[2]));
+          const benchmarkRanks = [cells[3], cells[4], cells[5]]
+            .map((cell) => parseOrganicRankText(text(cell)))
+            .filter((value) => value !== null);
+          const bestBenchmark = benchmarkRanks.length ? Math.min.apply(null, benchmarkRanks) : null;
+          if (ownRank === null && bestBenchmark === null) return { key: "missing", diff: null };
+          if (ownRank === null) return { key: "none", diff: null };
+          if (bestBenchmark === null) return { key: "missing", diff: null };
+          return { key: ownRank <= bestBenchmark ? "lead" : "lag", diff: ownRank - bestBenchmark };
+        };
+        const organicChipHtml = (category, diff) => {
+          const item = organicCategoryMap[category] || organicCategoryMap.missing;
+          let detail = "头部缺数据";
+          if (category === "lead" && diff === 0) detail = "与头部持平";
+          else if (category === "lead" && Number.isFinite(diff)) detail = `领先头部 ${Math.abs(diff)} 位`;
+          else if (category === "lag" && Number.isFinite(diff)) detail = `落后头部 ${diff} 位`;
+          else if (category === "none") detail = "自己未进自然位";
+          return `<span class="keyword-chip ${item.className}">${escapeHtml(item.label)}</span><span class="keyword-chip">${escapeHtml(detail)}</span>`;
+        };
+        const ensureOrganicFilters = (counts) => {
+          if (organicModule.querySelector(".organic-action-panel")) return;
+          const panel = doc.createElement("section");
+          panel.className = "action-panel organic-action-panel";
+          panel.innerHTML = `
+            <div class="action-row" data-organic-filter-row>
+              <span class="action-title">筛选</span>
+              <button class="filter-button is-active" type="button" data-organic-filter="all">全部 ${counts.all}</button>
+              ${Object.entries(organicCategoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-organic-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
+            </div>
+            <div class="rule-note organic-filter-note">
+              <div><strong>全部</strong>：展示 02 自然位标杆当前所有关键词。</div>
+              ${Object.entries(organicCategoryMap).map(([, item]) => `<div><strong>${item.label}</strong>：${item.note}</div>`).join("")}
+            </div>
+          `;
+          const tableWrap = organicTable.closest(".table-wrap") || organicTable;
+          tableWrap.before(panel);
+        };
         const oh = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">?</span></span>`;
         const headers = [
           ["关键词", "关键词与 01 总表一致，来自本任务已留底的西柚 ASIN 反查关键词数据。"],
@@ -1676,6 +1744,24 @@
           }
           th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
         });
+        const counts = { all: 0, lead: 0, lag: 0, none: 0, missing: 0 };
+        organicTable.querySelectorAll("tbody tr").forEach((row) => {
+          if (!row.cells || row.cells.length < 7) return;
+          const result = classifyOrganicRow(row);
+          const category = result.key || "missing";
+          const item = organicCategoryMap[category] || organicCategoryMap.missing;
+          const keyword = text(row.cells[0]);
+          row.dataset.organicCategory = category;
+          counts.all += 1;
+          counts[category] += 1;
+          if (!row.cells[0].querySelector(".keyword-name")) {
+            row.cells[0].innerHTML = `<span class="keyword-name">${escapeHtml(keyword)}</span><span class="keyword-tags">${organicChipHtml(category, result.diff)}</span>`;
+          }
+          row.cells[0].querySelectorAll(".keyword-chip").forEach((chip, index) => {
+            if (index === 0) chip.classList.add(item.className);
+          });
+        });
+        ensureOrganicFilters(counts);
       };
       if (organicTable.classList.contains("organic-rich-table")) {
         enhanceRichOrganicTable();
@@ -1934,6 +2020,18 @@
           if (!masterTable) return;
           masterTable.querySelectorAll('tbody tr').forEach(function (row) {
             row.classList.toggle('is-hidden', value !== 'all' && row.dataset.category !== value);
+          });
+        });
+      });
+      document.querySelectorAll('[data-organic-filter]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var value = button.getAttribute('data-organic-filter');
+          document.querySelectorAll('[data-organic-filter]').forEach(function (item) { item.classList.remove('is-active'); });
+          button.classList.add('is-active');
+          var organicTable = document.querySelector('[data-report-module="02"] .organic-rich-table') || document.querySelector('[data-report-module="02"] .organic-table');
+          if (!organicTable) return;
+          organicTable.querySelectorAll('tbody tr').forEach(function (row) {
+            row.classList.toggle('is-hidden', value !== 'all' && row.dataset.organicCategory !== value);
           });
         });
       });
