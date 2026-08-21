@@ -905,7 +905,7 @@
       .cat-tail { color: #175cd3; background: #eef5ff; }
       .cat-avoid { color: #dc2626; background: #fff1f1; }
       .cat-season { color: #00806b; background: #e7fbf5; }
-      .cat-missing { color: #dc2626; background: #fff1f1; }
+      .cat-missing { color: #475467; background: #eef2f6; }
       .rule-note { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 6px 16px; color: #667085; font-size: 13px; line-height: 1.6; padding: 12px 14px; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; }
       .rule-note div { min-width: 0; }
       tr.is-hidden { display: none; }
@@ -966,7 +966,7 @@
       .keyword-chip.cat-tail { color: #175cd3; background: #eef5ff; }
       .keyword-chip.cat-avoid { color: #dc2626; background: #fff1f1; }
       .keyword-chip.cat-season { color: #00806b; background: #e7fbf5; }
-      .keyword-chip.cat-missing { color: #dc2626; background: #fff1f1; }
+      .keyword-chip.cat-missing { color: #475467; background: #eef2f6; }
       .keyword-chip.signal-good, .season-chip.signal-good { color: #00806b; background: #e7fbf5; }
       .keyword-chip.signal-mid, .season-chip.signal-mid { color: #175cd3; background: #eef5ff; }
       .keyword-chip.signal-bad, .season-chip.signal-bad { color: #dc2626; background: #fff1f1; }
@@ -1019,7 +1019,8 @@
       .organic-chip-lead { color: #00806b; background: #e7fbf5; }
       .organic-chip-close { color: #175cd3; background: #eef5ff; }
       .organic-chip-lag { color: #dc2626; background: #fff1f1; }
-      .organic-chip-none, .organic-chip-missing { color: #dc2626; background: #fff1f1; }
+      .organic-chip-none { color: #dc2626; background: #fff1f1; }
+      .organic-chip-missing { color: #475467; background: #eef2f6; }
       .organic-rich-table { min-width: 1700px !important; }
       .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
       .organic-rich-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
@@ -1041,7 +1042,8 @@
       .organic-distance-lead .distance-good, .organic-distance-lead .distance-bad { color: #00806b !important; background: #e7fbf5 !important; }
       .organic-distance-close .distance-good, .organic-distance-close .distance-bad { color: #175cd3 !important; background: #eef5ff !important; }
       .organic-distance-lag .distance-good, .organic-distance-lag .distance-bad { color: #dc2626 !important; background: #fff1f1 !important; }
-      .organic-distance-none .distance-empty, .organic-distance-missing .distance-empty { color: #dc2626 !important; background: #fff1f1 !important; }
+      .organic-distance-none .distance-empty { color: #dc2626 !important; background: #fff1f1 !important; }
+      .organic-distance-missing .distance-empty { color: #475467 !important; background: #eef2f6 !important; }
       .tag { border-radius: 999px !important; padding: 3px 8px !important; }
       .tag.cat-profit { color: #00806b !important; background: #e7fbf5 !important; }
       .tag.cat-guard { color: #00806b !important; background: #e7fbf5 !important; }
@@ -1052,7 +1054,7 @@
       .tag.cat-tail { color: #175cd3 !important; background: #eef5ff !important; }
       .tag.cat-avoid { color: #dc2626 !important; background: #fff1f1 !important; }
       .tag.cat-season { color: #00806b !important; background: #e7fbf5 !important; }
-      .tag.cat-missing { color: #dc2626 !important; background: #fff1f1 !important; }
+      .tag.cat-missing { color: #475467 !important; background: #eef2f6 !important; }
       @media (max-width: 760px) {
         main { padding: 14px !important; }
         .report-layout { display: block !important; }
