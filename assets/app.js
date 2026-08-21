@@ -1680,7 +1680,7 @@
           lead: { label: "自然位领先", className: "organic-chip-lead", note: "自己自然位 ≤ 头部标杆自然位，说明我们在该关键词自然搜索里不弱于头部。" },
           close: { label: "自然位接近", className: "organic-chip-close", note: "自己自然位落后头部 1-3 位，属于最值得优先追赶的关键词。" },
           lag: { label: "自然位落后", className: "organic-chip-lag", note: "自己自然位落后头部超过 3 位（4 位及以上），说明我们明显落后头部，需要看主图、价格、Listing 和广告协同。" },
-          none: { label: "未进自然位", className: "organic-chip-none", note: "头部有自然位，但自己没有拿到自然位，优先判断是否值得通过广告和内容补位。" },
+          none: { label: "无自然位", className: "organic-chip-none", note: "头部有自然位，但自己没有拿到自然位，这是明确自然位缺口，优先判断是否值得通过广告和内容补位。" },
           missing: { label: "数据缺失", className: "organic-chip-missing", note: "自己或头部标杆缺少自然位关键字段，不做强判断，先等留底数据补齐。" }
         };
         const classifyOrganicRow = (row) => {
@@ -1705,7 +1705,7 @@
           else if (category === "lead" && Number.isFinite(diff)) detail = `领先头部 ${Math.abs(diff)} 位`;
           else if (category === "close" && Number.isFinite(diff)) detail = `落后头部 ${diff} 位`;
           else if (category === "lag" && Number.isFinite(diff)) detail = `落后头部 ${diff} 位`;
-          else if (category === "none") detail = "自己未进自然位";
+          else if (category === "none") detail = "自己无自然位";
           return `<span class="keyword-chip ${item.className}">${escapeHtml(item.label)}</span><span class="keyword-chip">${escapeHtml(detail)}</span>`;
         };
         const ensureOrganicFilters = (counts) => {
@@ -1884,7 +1884,7 @@
         lead: { label: "自然位领先", className: "organic-chip-lead" },
         close: { label: "自然位接近", className: "organic-chip-close" },
         lag: { label: "自然位落后", className: "organic-chip-lag" },
-        none: { label: "未进自然位", className: "organic-chip-none" },
+        none: { label: "无自然位", className: "organic-chip-none" },
         missing: { label: "数据缺失", className: "organic-chip-missing" }
       };
       const byKeyword = new Map();
