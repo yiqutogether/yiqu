@@ -1192,6 +1192,19 @@
       season: { label: "季节布局", className: "cat-season" },
       missing: { label: "数据缺失", className: "cat-missing" },
     };
+    const sortedFilterEntries = (map, counts, missingKey = "missing") => {
+      const entries = Object.entries(map).map(([key, item], index) => ({
+        key,
+        item,
+        index,
+        count: Number(counts[key] || 0)
+      }));
+      const regular = entries
+        .filter((entry) => entry.key !== missingKey)
+        .sort((a, b) => (b.count - a.count) || (a.index - b.index));
+      const missing = entries.filter((entry) => entry.key === missingKey);
+      return regular.concat(missing).map(({ key, item }) => [key, item]);
+    };
     const decodeCellValue = (value) => {
       const textarea = doc.createElement("textarea");
       textarea.innerHTML = String(value || "");
@@ -1511,11 +1524,12 @@
 
     const actionPanel = doc.createElement("section");
     actionPanel.className = "action-panel";
+    const categoryFilterEntries = sortedFilterEntries(categoryMap, counts);
     actionPanel.innerHTML = `
       <div class="action-row" data-filter-row>
         <span class="action-title">筛选</span>
         <button class="filter-button is-active" type="button" data-filter="all">全部 ${counts.all}</button>
-        ${Object.entries(categoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
+        ${categoryFilterEntries.map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
       </div>
       <div class="rule-note">
         <div><strong>利润放大</strong>：有订单，ACOS ≤ 25%，CVR ≥ 15%，且点击量足够，优先加预算、加精准词。</div>
@@ -1712,15 +1726,16 @@
           if (organicModule.querySelector(".organic-action-panel")) return;
           const panel = doc.createElement("section");
           panel.className = "action-panel organic-action-panel";
+          const organicFilterEntries = sortedFilterEntries(organicCategoryMap, counts);
           panel.innerHTML = `
             <div class="action-row" data-organic-filter-row>
               <span class="action-title">筛选</span>
               <button class="filter-button is-active" type="button" data-organic-filter="all">全部 ${counts.all}</button>
-              ${Object.entries(organicCategoryMap).map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-organic-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
+              ${organicFilterEntries.map(([key, item]) => `<button class="filter-button ${item.className}" type="button" data-organic-filter="${key}"><span class="dot"></span>${item.label} ${counts[key]}</button>`).join("")}
             </div>
             <div class="rule-note organic-filter-note">
               <div><strong>全部</strong>：展示 02 自然位标杆当前所有关键词。</div>
-              ${Object.entries(organicCategoryMap).map(([, item]) => `<div><strong>${item.label}</strong>：${item.note}</div>`).join("")}
+              ${organicFilterEntries.map(([, item]) => `<div><strong>${item.label}</strong>：${item.note}</div>`).join("")}
             </div>
           `;
           const tableWrap = organicTable.closest(".table-wrap") || organicTable;
