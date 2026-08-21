@@ -1007,6 +1007,25 @@
       .organic-table .benchmark-asin { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin: 0 !important; line-height: 1.25; }
       .organic-table .benchmark-asin strong { display: block; color: #172033; font-weight: 800; }
       .organic-table .benchmark-asin img { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
+      .organic-hero { margin-bottom: 14px; padding: 22px 24px; border-radius: 8px; color: #fff; background: linear-gradient(120deg, #123a70, #2468d8); }
+      .organic-hero h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
+      .organic-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
+      .organic-note { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #d9e1ea; border-radius: 8px; background: #eaf7f1; color: #17324d; font-size: 13px; line-height: 1.6; }
+      .organic-rich-table { min-width: 1760px !important; }
+      .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 58px; position: static; box-shadow: none; }
+      .organic-rich-table tbody td:nth-child(2), .organic-rich-table thead tr:first-child th:nth-child(2) { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+      .organic-rich-table thead tr:first-child th:nth-child(2) { z-index: 30; background: #e9f0f8 !important; }
+      .organic-rank { display: grid; gap: 3px; }
+      .organic-rank strong { color: #172033; font-size: 14px; }
+      .organic-rank span { color: #667085; font-size: 12px; }
+      .benchmark-card { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: start; }
+      .benchmark-card img, .benchmark-card .image-fallback { width: 68px; height: 68px; border-radius: 5px; object-fit: cover; }
+      .benchmark-copy { min-width: 0; display: grid; gap: 3px; }
+      .benchmark-rank { color: #174ea6; font-size: 15px; font-weight: 800; }
+      .benchmark-card .benchmark-asin { display: block !important; color: #174ea6; font-weight: 800; }
+      .benchmark-title { color: #172033; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .benchmark-meta { color: #344054; font-size: 12px; line-height: 1.35; }
+      .benchmark-sub { color: #667085; font-size: 12px; line-height: 1.35; }
       .distance-good { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #00806b !important; background: #e7fbf5; font-weight: 800; }
       .distance-bad { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #dc2626 !important; background: #fff1f1; font-weight: 800; }
       .distance-empty { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #98a2b3 !important; background: #f1f3f6; font-weight: 700; }
@@ -1618,6 +1637,7 @@
       const organicModule = doc.querySelector('[data-report-module="02"]');
       const organicTable = organicModule && organicModule.querySelector(".organic-table");
       if (!organicModule || !organicTable) return;
+      if (organicTable.classList.contains("organic-rich-table")) return;
 
       const summary = organicModule.querySelector(".module-summary");
       if (summary) summary.classList.add("organic-summary");
