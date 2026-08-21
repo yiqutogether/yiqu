@@ -1011,10 +1011,9 @@
       .organic-hero h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
       .organic-hero p { margin: 0; color: rgba(255,255,255,.82); font-size: 13px; }
       .organic-note { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #d9e1ea; border-radius: 8px; background: #eaf7f1; color: #17324d; font-size: 13px; line-height: 1.6; }
-      .organic-rich-table { min-width: 1760px !important; }
-      .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 58px; position: static; box-shadow: none; }
-      .organic-rich-table tbody td:nth-child(2), .organic-rich-table thead tr:first-child th:nth-child(2) { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
-      .organic-rich-table thead tr:first-child th:nth-child(2) { z-index: 30; background: #e9f0f8 !important; }
+      .organic-rich-table { min-width: 1700px !important; }
+      .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+      .organic-rich-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
       .organic-rank { display: grid; gap: 3px; }
       .organic-rank strong { color: #172033; font-size: 14px; }
       .organic-rank span { color: #667085; font-size: 12px; }
@@ -1640,9 +1639,12 @@
       const enhanceRichOrganicTable = () => {
         const richHead = organicTable.querySelector("thead");
         if (!richHead) return;
+        organicTable.querySelectorAll("tbody tr").forEach((row) => {
+          const firstCell = row.cells && row.cells[0];
+          if (row.cells.length === 8 && /^\d+$/.test(text(firstCell))) firstCell.remove();
+        });
         const oh = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">?</span></span>`;
         const headers = [
-          ["#", "当前模块排序序号；默认按差距可计算、差距从小到大，以及搜索量排序生成。"],
           ["关键词", "关键词与 01 总表一致，来自本任务已留底的西柚 ASIN 反查关键词数据。"],
           ["月搜索量", "由 ABA 近 12 个月周搜索量聚合后的最近月搜索量；无月数据时回退显示最新周搜索量。"],
           ["自己自然位", "目标 ASIN 在该关键词 ranks 中自然位 or 的最小 totalRank，按页码/页内位展示。"],
@@ -1656,7 +1658,7 @@
         const oldColgroup = organicTable.querySelector("colgroup");
         if (oldColgroup) oldColgroup.remove();
         const colgroup = doc.createElement("colgroup");
-        [58, 220, 130, 150, 360, 360, 360, 150].forEach((width) => {
+        [220, 130, 150, 360, 360, 360, 150].forEach((width) => {
           const col = doc.createElement("col");
           col.style.width = `${width}px`;
           col.dataset.defaultWidth = String(width);
@@ -1664,7 +1666,7 @@
         });
         organicTable.insertBefore(colgroup, organicTable.firstChild);
 
-        const sortableColumns = new Set([0, 2, 3, 4, 5, 6, 7]);
+        const sortableColumns = new Set([1, 2, 3, 4, 5, 6]);
         richHead.querySelectorAll("th[data-col-index]").forEach((th) => {
           const index = Number(th.dataset.colIndex);
           if (sortableColumns.has(index)) {
