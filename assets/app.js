@@ -1014,6 +1014,7 @@
       .organic-rich-table { min-width: 1700px !important; }
       .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
       .organic-rich-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
+      .organic-rich-table tbody td:nth-child(2) { font-size: 15px !important; line-height: 1.15 !important; font-weight: 800 !important; color: #172033 !important; }
       .organic-rank { display: grid; gap: 3px; }
       .organic-rank strong { color: #172033; font-size: 14px; }
       .organic-rank span { color: #667085; font-size: 12px; }
