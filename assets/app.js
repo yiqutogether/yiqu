@@ -857,11 +857,11 @@
   function polishReportHtmlV2(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
-    const table = doc.querySelector("table");
     const moduleOne = doc.querySelector('[data-report-module="01"]');
+    const table = moduleOne ? moduleOne.querySelector("table") : doc.querySelector("table");
     const main = moduleOne || doc.querySelector("main") || doc.body;
     const oldHeader = doc.querySelector("header");
-    const rows = Array.from(doc.querySelectorAll("tbody tr"));
+    const rows = table ? Array.from(table.querySelectorAll("tbody tr")) : [];
 
     const style = doc.createElement("style");
     style.textContent = `
@@ -872,6 +872,7 @@
       .module-menu { position: sticky; top: 12px; display: grid; gap: 8px; }
       .module-tab { width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid #d7dee8; border-radius: 6px; background: #fff; color: #344054; font: inherit; font-size: 13px; font-weight: 800; text-align: left; cursor: pointer; }
       .module-tab.is-soon { color: #98a2b3; background: #f5f7fa; }
+      .module-tab.is-ready { color: #174ea6; background: #fff; }
       .module-tab.is-active { border-color: #1d5fd1; background: #eaf2ff; color: #174ea6; box-shadow: inset 3px 0 0 #1d5fd1; }
       .module-content { min-width: 0; }
       .module-section { display: none; }
