@@ -897,15 +897,15 @@
       .filter-button.is-active { border-color: #172033; box-shadow: inset 0 0 0 2px #172033; }
       .dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; }
       .cat-profit { color: #00806b; background: #e7fbf5; }
-      .cat-guard { color: #1677ff; background: #edf5ff; }
-      .cat-hold { color: #0f5fbf; background: #eaf3ff; }
-      .cat-scale { color: #12a150; background: #ebf8f0; }
-      .cat-review { color: #d99000; background: #fff7e5; }
+      .cat-guard { color: #00806b; background: #e7fbf5; }
+      .cat-hold { color: #175cd3; background: #eef5ff; }
+      .cat-scale { color: #175cd3; background: #eef5ff; }
+      .cat-review { color: #dc2626; background: #fff1f1; }
       .cat-stop { color: #dc2626; background: #fff1f1; }
-      .cat-tail { color: #7a4cc2; background: #f4f0ff; }
-      .cat-avoid { color: #667085; background: #f1f3f6; }
-      .cat-season { color: #b45309; background: #fff3d6; }
-      .cat-missing { color: #475467; background: #eef2f6; }
+      .cat-tail { color: #175cd3; background: #eef5ff; }
+      .cat-avoid { color: #dc2626; background: #fff1f1; }
+      .cat-season { color: #00806b; background: #e7fbf5; }
+      .cat-missing { color: #dc2626; background: #fff1f1; }
       .rule-note { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 6px 16px; color: #667085; font-size: 13px; line-height: 1.6; padding: 12px 14px; background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; }
       .rule-note div { min-width: 0; }
       tr.is-hidden { display: none; }
@@ -958,20 +958,23 @@
       .keyword-chip, .season-chip, .conversion-chip, .difficulty-pill { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
       .keyword-chip { background: #eef5ff; color: #175cd3; }
       .keyword-chip.cat-profit { color: #00806b; background: #e7fbf5; }
-      .keyword-chip.cat-guard { color: #1677ff; background: #edf5ff; }
-      .keyword-chip.cat-hold { color: #0f5fbf; background: #eaf3ff; }
-      .keyword-chip.cat-scale { color: #12a150; background: #ebf8f0; }
-      .keyword-chip.cat-review { color: #d99000; background: #fff7e5; }
+      .keyword-chip.cat-guard { color: #00806b; background: #e7fbf5; }
+      .keyword-chip.cat-hold { color: #175cd3; background: #eef5ff; }
+      .keyword-chip.cat-scale { color: #175cd3; background: #eef5ff; }
+      .keyword-chip.cat-review { color: #dc2626; background: #fff1f1; }
       .keyword-chip.cat-stop { color: #dc2626; background: #fff1f1; }
-      .keyword-chip.cat-tail { color: #7a4cc2; background: #f4f0ff; }
-      .keyword-chip.cat-avoid { color: #667085; background: #f1f3f6; }
-      .keyword-chip.cat-season { color: #b45309; background: #fff3d6; }
-      .keyword-chip.cat-missing { color: #475467; background: #eef2f6; }
+      .keyword-chip.cat-tail { color: #175cd3; background: #eef5ff; }
+      .keyword-chip.cat-avoid { color: #dc2626; background: #fff1f1; }
+      .keyword-chip.cat-season { color: #00806b; background: #e7fbf5; }
+      .keyword-chip.cat-missing { color: #dc2626; background: #fff1f1; }
+      .keyword-chip.signal-good, .season-chip.signal-good, .conversion-chip.signal-good { color: #00806b; background: #e7fbf5; }
+      .keyword-chip.signal-mid, .season-chip.signal-mid, .conversion-chip.signal-mid { color: #175cd3; background: #eef5ff; }
+      .keyword-chip.signal-bad, .season-chip.signal-bad, .conversion-chip.signal-bad { color: #dc2626; background: #fff1f1; }
       .conversion-chip { background: #eaf7f1; color: #0f8f61; }
-      .conversion-chip.pending { background: #eef2f6; color: #475467; }
-      .season-chip { background: #fff7e5; color: #a15c00; }
+      .conversion-chip.pending { background: #fff1f1; color: #dc2626; }
+      .season-chip { background: #eef5ff; color: #175cd3; }
       .difficulty-pill.low { background: #eaf7f1; color: #0f8f61; }
-      .difficulty-pill.mid { background: #fff7e5; color: #a15c00; }
+      .difficulty-pill.mid { background: #eef5ff; color: #175cd3; }
       .difficulty-pill.high { background: #fff1f1; color: #dc2626; }
       .bid-main { display: block; font-size: 15px; font-weight: 800; color: #172033; margin-bottom: 4px; }
       .bid-range { display: block; color: #667085; font-size: 11px; }
@@ -1017,7 +1020,7 @@
       .organic-chip-lead { color: #00806b; background: #e7fbf5; }
       .organic-chip-close { color: #175cd3; background: #eef5ff; }
       .organic-chip-lag { color: #dc2626; background: #fff1f1; }
-      .organic-chip-none, .organic-chip-missing { color: #475467; background: #eef2f6; }
+      .organic-chip-none, .organic-chip-missing { color: #dc2626; background: #fff1f1; }
       .organic-rich-table { min-width: 1700px !important; }
       .organic-rich-table tbody td:first-child, .organic-rich-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
       .organic-rich-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
@@ -1039,18 +1042,18 @@
       .organic-distance-lead .distance-good, .organic-distance-lead .distance-bad { color: #00806b !important; background: #e7fbf5 !important; }
       .organic-distance-close .distance-good, .organic-distance-close .distance-bad { color: #175cd3 !important; background: #eef5ff !important; }
       .organic-distance-lag .distance-good, .organic-distance-lag .distance-bad { color: #dc2626 !important; background: #fff1f1 !important; }
-      .organic-distance-none .distance-empty, .organic-distance-missing .distance-empty { color: #475467 !important; background: #eef2f6 !important; }
+      .organic-distance-none .distance-empty, .organic-distance-missing .distance-empty { color: #dc2626 !important; background: #fff1f1 !important; }
       .tag { border-radius: 999px !important; padding: 3px 8px !important; }
       .tag.cat-profit { color: #00806b !important; background: #e7fbf5 !important; }
-      .tag.cat-guard { color: #1677ff !important; background: #edf5ff !important; }
-      .tag.cat-hold { color: #0f5fbf !important; background: #eaf3ff !important; }
-      .tag.cat-scale { color: #12a150 !important; background: #ebf8f0 !important; }
-      .tag.cat-review { color: #d99000 !important; background: #fff7e5 !important; }
+      .tag.cat-guard { color: #00806b !important; background: #e7fbf5 !important; }
+      .tag.cat-hold { color: #175cd3 !important; background: #eef5ff !important; }
+      .tag.cat-scale { color: #175cd3 !important; background: #eef5ff !important; }
+      .tag.cat-review { color: #dc2626 !important; background: #fff1f1 !important; }
       .tag.cat-stop { color: #dc2626 !important; background: #fff1f1 !important; }
-      .tag.cat-tail { color: #7a4cc2 !important; background: #f4f0ff !important; }
-      .tag.cat-avoid { color: #667085 !important; background: #f1f3f6 !important; }
-      .tag.cat-season { color: #b45309 !important; background: #fff3d6 !important; }
-      .tag.cat-missing { color: #475467 !important; background: #eef2f6 !important; }
+      .tag.cat-tail { color: #175cd3 !important; background: #eef5ff !important; }
+      .tag.cat-avoid { color: #dc2626 !important; background: #fff1f1 !important; }
+      .tag.cat-season { color: #00806b !important; background: #e7fbf5 !important; }
+      .tag.cat-missing { color: #dc2626 !important; background: #fff1f1 !important; }
       @media (max-width: 760px) {
         main { padding: 14px !important; }
         .report-layout { display: block !important; }
@@ -1453,16 +1456,16 @@
     };
     const seasonMeta = (points) => {
       const values = points.map((item) => Number(item.value || 0)).filter((n) => n > 0);
-      if (values.length < 2) return { label: "暂无趋势", sub: "ABA 12月不足" };
+      if (values.length < 2) return { label: "暂无趋势", className: "signal-bad", sub: "ABA 12月不足" };
       const first = values[0];
       const last = values[values.length - 1];
       const avg = values.reduce((sum, n) => sum + n, 0) / values.length;
       const range = Math.max(...values) - Math.min(...values);
       const change = first ? (last - first) / first : 0;
-      if (change > 0.15) return { label: "旺季抬升", sub: "按 ABA 12月趋势判断" };
-      if (change < -0.15) return { label: "淡季回落", sub: "按 ABA 12月趋势判断" };
-      if (avg && range / avg > 0.35) return { label: "季节波动明显", sub: "按 ABA 12月趋势判断" };
-      return { label: "需求相对平稳", sub: "按 ABA 12月趋势判断" };
+      if (change > 0.15) return { label: "旺季抬升", className: "signal-good", sub: "按 ABA 12月趋势判断" };
+      if (change < -0.15) return { label: "淡季回落", className: "signal-bad", sub: "按 ABA 12月趋势判断" };
+      if (avg && range / avg > 0.35) return { label: "季节波动明显", className: "signal-bad", sub: "按 ABA 12月趋势判断" };
+      return { label: "需求相对平稳", className: "signal-mid", sub: "按 ABA 12月趋势判断" };
     };
     const marketConversionMeta = (sourceCell) => {
       if (sourceCell && sourceCell.dataset && sourceCell.dataset.marketConversion) {
@@ -1477,11 +1480,11 @@
     const keywordTags = (keyword, category, weekly, difficulty, ad) => {
       const categoryItem = categoryMap[category] || categoryMap.missing;
       const tags = [{ label: categoryItem.label, className: categoryItem.className }];
-      if (weekly >= 100000) tags.push("高搜索");
-      else if (weekly >= 30000) tags.push("中高搜索");
-      else tags.push("长尾池");
-      if (difficulty >= 85) tags.push("竞争强");
-      if (ad.orders > 0) tags.push("已出单");
+      if (weekly >= 100000) tags.push({ label: "高搜索", className: "signal-good" });
+      else if (weekly >= 30000) tags.push({ label: "中高搜索", className: "signal-mid" });
+      else tags.push({ label: "长尾池", className: "signal-mid" });
+      if (difficulty >= 85) tags.push({ label: "竞争强", className: "signal-bad" });
+      if (ad.orders > 0) tags.push({ label: "已出单", className: "signal-good" });
       return tags.slice(0, 4).map((tag) => {
         if (typeof tag === "string") return `<span class="keyword-chip">${escapeHtml(tag)}</span>`;
         return `<span class="keyword-chip ${tag.className}">${escapeHtml(tag.label)}</span>`;
@@ -1617,7 +1620,7 @@
       const difficultyHtml = `<span class="difficulty-pill ${diff.className}">${difficulty || "-"} · ${diff.label}</span>`;
       const bidHtml = `<span class="bid-main">${escapeHtml(bid.main)}</span><span class="bid-range">${escapeHtml(bid.range || "无区间")}</span>`;
       const conversionHtml = `<span class="conversion-chip pending">${conversion.label}</span><span class="subtext">${escapeHtml(conversion.sub)}</span>`;
-      const seasonHtml = `<span class="season-chip">${season.label}</span><span class="subtext">${escapeHtml(season.sub)}</span>`;
+      const seasonHtml = `<span class="season-chip ${season.className || "signal-mid"}">${season.label}</span><span class="subtext">${escapeHtml(season.sub)}</span>`;
       const adClickHtml = metric(ad.hasData ? compact(ad.clicks) : "-", `CTR ${ad.hasData ? pct(ad.ctr) : "-"}`);
       const adOrderHtml = metric(ad.hasData ? compact(ad.orders) : "-", `CVR ${ad.hasData ? pct(ad.cvr) : "-"}`);
       const adSalesHtml = metric(ad.hasData && Number.isFinite(ad.sales) && ad.sales > 0 ? money(ad.sales) : "-", `ACOS ${ad.hasData ? pct(ad.acos) : "-"}`);
