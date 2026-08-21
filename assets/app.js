@@ -1015,6 +1015,7 @@
       .organic-filter-note { margin-top: -6px; }
       .organic-filter-note strong { color: #56647a; }
       .organic-chip-lead { color: #00806b; background: #e7fbf5; }
+      .organic-chip-close { color: #175cd3; background: #eef5ff; }
       .organic-chip-lag { color: #dc2626; background: #fff1f1; }
       .organic-chip-none, .organic-chip-missing { color: #475467; background: #eef2f6; }
       .organic-rich-table { min-width: 1700px !important; }
@@ -1035,6 +1036,10 @@
       .distance-good { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #00806b !important; background: #e7fbf5; font-weight: 800; }
       .distance-bad { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #dc2626 !important; background: #fff1f1; font-weight: 800; }
       .distance-empty { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #98a2b3 !important; background: #f1f3f6; font-weight: 700; }
+      .organic-distance-lead .distance-good, .organic-distance-lead .distance-bad { color: #00806b !important; background: #e7fbf5 !important; }
+      .organic-distance-close .distance-good, .organic-distance-close .distance-bad { color: #175cd3 !important; background: #eef5ff !important; }
+      .organic-distance-lag .distance-good, .organic-distance-lag .distance-bad { color: #dc2626 !important; background: #fff1f1 !important; }
+      .organic-distance-none .distance-empty, .organic-distance-missing .distance-empty { color: #475467 !important; background: #eef2f6 !important; }
       .tag { border-radius: 999px !important; padding: 3px 8px !important; }
       .tag.cat-profit { color: #00806b !important; background: #e7fbf5 !important; }
       .tag.cat-guard { color: #1677ff !important; background: #edf5ff !important; }
@@ -1669,7 +1674,8 @@
         };
         const organicCategoryMap = {
           lead: { label: "自然位领先", className: "organic-chip-lead", note: "自己自然位 ≤ 头部标杆自然位，说明我们在该关键词自然搜索里不弱于头部。" },
-          lag: { label: "自然位落后", className: "organic-chip-lag", note: "自己自然位 > 头部标杆自然位，说明我们仍落后头部，需要看主图、价格、Listing 和广告协同。" },
+          close: { label: "自然位接近", className: "organic-chip-close", note: "自己自然位落后头部 1-3 位，属于最值得优先追赶的关键词。" },
+          lag: { label: "自然位落后", className: "organic-chip-lag", note: "自己自然位落后头部超过 3 位（4 位及以上），说明我们明显落后头部，需要看主图、价格、Listing 和广告协同。" },
           none: { label: "未进自然位", className: "organic-chip-none", note: "头部有自然位，但自己没有拿到自然位，优先判断是否值得通过广告和内容补位。" },
           missing: { label: "数据缺失", className: "organic-chip-missing", note: "自己或头部标杆缺少自然位关键字段，不做强判断，先等留底数据补齐。" }
         };
@@ -1683,13 +1689,17 @@
           if (ownRank === null && bestBenchmark === null) return { key: "missing", diff: null };
           if (ownRank === null) return { key: "none", diff: null };
           if (bestBenchmark === null) return { key: "missing", diff: null };
-          return { key: ownRank <= bestBenchmark ? "lead" : "lag", diff: ownRank - bestBenchmark };
+          const diff = ownRank - bestBenchmark;
+          if (diff <= 0) return { key: "lead", diff };
+          if (diff <= 3) return { key: "close", diff };
+          return { key: "lag", diff };
         };
         const organicChipHtml = (category, diff) => {
           const item = organicCategoryMap[category] || organicCategoryMap.missing;
           let detail = "头部缺数据";
           if (category === "lead" && diff === 0) detail = "与头部持平";
           else if (category === "lead" && Number.isFinite(diff)) detail = `领先头部 ${Math.abs(diff)} 位`;
+          else if (category === "close" && Number.isFinite(diff)) detail = `落后头部 ${diff} 位`;
           else if (category === "lag" && Number.isFinite(diff)) detail = `落后头部 ${diff} 位`;
           else if (category === "none") detail = "自己未进自然位";
           return `<span class="keyword-chip ${item.className}">${escapeHtml(item.label)}</span><span class="keyword-chip">${escapeHtml(detail)}</span>`;
@@ -1744,7 +1754,7 @@
           }
           th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
         });
-        const counts = { all: 0, lead: 0, lag: 0, none: 0, missing: 0 };
+        const counts = { all: 0, lead: 0, close: 0, lag: 0, none: 0, missing: 0 };
         organicTable.querySelectorAll("tbody tr").forEach((row) => {
           if (!row.cells || row.cells.length < 7) return;
           const result = classifyOrganicRow(row);
@@ -1760,6 +1770,7 @@
           row.cells[0].querySelectorAll(".keyword-chip").forEach((chip, index) => {
             if (index === 0) chip.classList.add(item.className);
           });
+          row.cells[6].classList.add("organic-distance-" + category);
         });
         ensureOrganicFilters(counts);
       };
