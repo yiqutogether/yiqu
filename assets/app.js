@@ -989,6 +989,27 @@
       .asin { display: grid !important; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 7px !important; line-height: 1.25; }
       .asin img, .image-fallback { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
       .image-fallback { display: inline-flex; align-items: center; justify-content: center; color: #667085; font-size: 10px; font-weight: 700; }
+      .organic-title { margin-top: 0; }
+      .organic-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+      .organic-summary .summary-card { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(15, 23, 42, .04); }
+      .organic-summary .summary-card span { display: block; color: #667085; font-size: 12px; margin-bottom: 6px; }
+      .organic-summary .summary-card strong { display: block; color: #0f172a; font-size: 22px; line-height: 1.1; }
+      .organic-rule-note { margin: 0 0 18px; }
+      .organic-table { min-width: 1130px !important; }
+      .organic-table th { text-align: center !important; }
+      .organic-table td { text-align: left !important; }
+      .organic-table tbody td:first-child, .organic-table thead tr:first-child th:first-child { width: 220px; position: sticky; left: 0; z-index: 12; background: #fff; box-shadow: 6px 0 14px rgba(15, 23, 42, .05); }
+      .organic-table thead tr:first-child th:first-child { z-index: 30; background: #e9f0f8 !important; }
+      .organic-table .keyword { font-weight: 800; color: #172033; }
+      .rank-cell { display: grid; gap: 4px; }
+      .rank-main { display: block; font-size: 15px; line-height: 1.15; font-weight: 800; color: #172033; }
+      .rank-sub { display: block; color: #667085; font-size: 11px; line-height: 1.25; }
+      .organic-table .benchmark-asin { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; margin: 0 !important; line-height: 1.25; }
+      .organic-table .benchmark-asin strong { display: block; color: #172033; font-weight: 800; }
+      .organic-table .benchmark-asin img { width: 30px; height: 30px; object-fit: cover; background: #eef1f5; border: 1px solid #dde3ea; border-radius: 5px; }
+      .distance-good { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #00806b !important; background: #e7fbf5; font-weight: 800; }
+      .distance-bad { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #dc2626 !important; background: #fff1f1; font-weight: 800; }
+      .distance-empty { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; color: #98a2b3 !important; background: #f1f3f6; font-weight: 700; }
       .tag { border-radius: 999px !important; padding: 3px 8px !important; }
       .tag.cat-profit { color: #00806b !important; background: #e7fbf5 !important; }
       .tag.cat-guard { color: #1677ff !important; background: #edf5ff !important; }
@@ -1593,6 +1614,106 @@
       if (tag) tag.classList.add(categoryItem.className);
     });
 
+    const enhanceOrganicModule = () => {
+      const organicModule = doc.querySelector('[data-report-module="02"]');
+      const organicTable = organicModule && organicModule.querySelector(".organic-table");
+      if (!organicModule || !organicTable) return;
+
+      const summary = organicModule.querySelector(".module-summary");
+      if (summary) summary.classList.add("organic-summary");
+
+      const existingTitle = organicModule.querySelector(".organic-title");
+      if (!existingTitle) {
+        const title = doc.createElement("div");
+        title.className = "table-title organic-title";
+        title.innerHTML = '<h2>自然位标杆</h2><span>复用本任务留底数据 · 不新调西柚</span>';
+        if (summary) summary.before(title);
+        else organicModule.insertBefore(title, organicModule.firstChild);
+      }
+
+      if (!organicModule.querySelector(".organic-rule-note")) {
+        const rule = doc.createElement("section");
+        rule.className = "rule-note organic-rule-note";
+        rule.innerHTML = `
+          <div><strong>我的自然位</strong>：取目标 ASIN 在 ranks 里自然位 or 的最小 totalRank，未上榜显示 --。</div>
+          <div><strong>我的广告位</strong>：取目标 ASIN 在 sp/sb/sbv 广告位里的最小 totalRank，未上榜显示 --。</div>
+          <div><strong>标杆 ASIN</strong>：只从已抓取的点击前三竞对里挑自然位最靠前的非自己 ASIN，不另查全货架。</div>
+          <div><strong>差距</strong>：我的自然位减标杆自然位，正数代表落后位数；未上榜不参与差距，排序放最后。</div>
+        `;
+        const tableWrap = organicTable.closest(".table-wrap") || organicTable;
+        tableWrap.before(rule);
+      }
+
+      const organicHead = organicTable.querySelector("thead");
+      const oh = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">?</span></span>`;
+      if (organicHead) {
+        organicHead.innerHTML =
+          `<tr class="group-row">` +
+          `<th rowspan="2">${oh("关键词", "关键词与 01 总表一致，来自本任务已留底的西柚关键词数据。")}</th>` +
+          `<th class="group-self" colspan="2">${oh("自身", "目标 ASIN 在该关键词下的自然位和广告位；未上榜统一显示 --。")}</th>` +
+          `<th class="group-competition" colspan="2">${oh("自然位标杆", "仅从已抓取点击前三竞对中选择自然位最靠前的非自己 ASIN，用作可追赶参照。")}</th>` +
+          `<th rowspan="2">${oh("差距", "差距=我的自然位-标杆自然位；正数代表落后，越小越接近标杆。")}</th>` +
+          `</tr>` +
+          `<tr>` +
+          `<th>${oh("我的自然位", "目标 ASIN ranks 里 or 的最小 totalRank，按页码/位置换算为总位次参与排序。")}</th>` +
+          `<th>${oh("我的广告位", "目标 ASIN ranks 里 sp/sb/sbv 的最小 totalRank，按页码/位置换算为总位次参与排序。")}</th>` +
+          `<th>${oh("标杆 ASIN", "标杆主图 URL 来自留底数据，只引用 URL，不下载图片。")}</th>` +
+          `<th>${oh("标杆自然位", "标杆 ASIN 在该关键词自然位里的最小 totalRank。")}</th>` +
+          `</tr>`;
+      }
+
+      const oldColgroup = organicTable.querySelector("colgroup");
+      if (oldColgroup) oldColgroup.remove();
+      const colgroup = doc.createElement("colgroup");
+      [220, 150, 150, 310, 150, 150].forEach((width) => {
+        const col = doc.createElement("col");
+        col.style.width = `${width}px`;
+        col.dataset.defaultWidth = String(width);
+        colgroup.appendChild(col);
+      });
+      organicTable.insertBefore(colgroup, organicTable.firstChild);
+
+      if (organicHead) {
+        const sortableColumns = new Set([1, 2, 4, 5]);
+        const firstRowSpans = organicHead.querySelectorAll("tr:first-child th[rowspan]");
+        if (firstRowSpans[0]) firstRowSpans[0].dataset.colIndex = "0";
+        if (firstRowSpans[1]) firstRowSpans[1].dataset.colIndex = "5";
+        organicHead.querySelectorAll("tr:last-child th").forEach((th, index) => {
+          th.dataset.colIndex = String(index + 1);
+        });
+        organicHead.querySelectorAll("th[data-col-index]").forEach((th) => {
+          const index = Number(th.dataset.colIndex);
+          if (sortableColumns.has(index)) {
+            th.dataset.sortable = "number";
+            th.insertAdjacentHTML("beforeend", '<button type="button" class="sort-button" data-sort-button title="点击按本列数值排序，默认从小到大/从大到小切换" aria-label="按本列数值排序"><span class="sort-up"></span><span class="sort-down"></span></button>');
+          }
+          th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
+        });
+      }
+
+      const rankHtml = (value, sub) => {
+        const clean = escapeHtml(value || "--");
+        if (!value || value === "--") return '<span class="distance-empty">--</span>';
+        return `<span class="rank-cell"><strong class="rank-main">${clean}</strong><span class="rank-sub">${escapeHtml(sub)}</span></span>`;
+      };
+      organicTable.querySelectorAll("tbody tr").forEach((row) => {
+        const cells = Array.from(row.cells);
+        if (cells.length < 6 || row.dataset.organicEnhanced === "true") return;
+        const ownOrganic = text(cells[1]);
+        const ownAd = text(cells[2]);
+        const benchmarkRank = text(cells[4]);
+        row.innerHTML =
+          `<td class="keyword">${escapeHtml(text(cells[0]))}</td>` +
+          `<td>${rankHtml(ownOrganic, "自然位")}</td>` +
+          `<td>${rankHtml(ownAd, "广告位")}</td>` +
+          `<td>${htmlOf(cells[3]) || '<span class="distance-empty">--</span>'}</td>` +
+          `<td>${rankHtml(benchmarkRank, "标杆自然位")}</td>` +
+          `<td>${htmlOf(cells[5]) || '<span class="distance-empty">--</span>'}</td>`;
+        row.dataset.organicEnhanced = "true";
+      });
+    };
+    enhanceOrganicModule();
+
     doc.querySelectorAll(".asin").forEach((node) => {
       let img = node.querySelector("img");
       const asin = (text(node).match(/B0[A-Z0-9]{8}/) || [])[0];
@@ -1646,6 +1767,14 @@
       function sortNumberFromCell(cell) {
         if (!cell) return null;
         var text = (cell.textContent || '').replace(/,/g, '').replace(/\\$/g, '');
+        if (/--/.test(text) || /未上榜/.test(text)) return null;
+        var rankMatch = text.match(/P\\s*(\\d+)\\s*[·.\\-]\\s*(\\d+)/i);
+        if (rankMatch) {
+          var page = Number(rankMatch[1]);
+          var position = Number(rankMatch[2]);
+          var rankValue = (page - 1) * 48 + position;
+          return Number.isFinite(rankValue) ? rankValue : null;
+        }
         var match = text.match(/-?\\d+(?:\\.\\d+)?/);
         if (!match) return null;
         var value = Number(match[0]);
@@ -1698,7 +1827,8 @@
           var th = sortButton.closest('th[data-col-index]');
           if (!th) return;
           var nextDirection = sortButton.classList.contains('is-desc') ? 'asc' : 'desc';
-          document.querySelectorAll('[data-sort-button]').forEach(function (button) {
+          var table = th.closest('table');
+          (table ? table.querySelectorAll('[data-sort-button]') : document.querySelectorAll('[data-sort-button]')).forEach(function (button) {
             button.classList.remove('is-asc', 'is-desc');
             button.setAttribute('aria-sort', 'none');
           });
@@ -1737,7 +1867,9 @@
           var value = button.getAttribute('data-filter');
           document.querySelectorAll('[data-filter]').forEach(function (item) { item.classList.remove('is-active'); });
           button.classList.add('is-active');
-          document.querySelectorAll('tbody tr').forEach(function (row) {
+          var masterTable = document.querySelector('[data-report-module="01"] table') || document.querySelector('table');
+          if (!masterTable) return;
+          masterTable.querySelectorAll('tbody tr').forEach(function (row) {
             row.classList.toggle('is-hidden', value !== 'all' && row.dataset.category !== value);
           });
         });
@@ -1747,7 +1879,8 @@
         if (!handle) return;
         var th = handle.parentElement;
         var index = Number(th.getAttribute('data-col-index'));
-        var col = document.querySelectorAll('colgroup col')[index];
+        var table = th.closest('table');
+        var col = table && table.querySelectorAll('colgroup col')[index];
         if (col && col.dataset.defaultWidth) col.style.width = col.dataset.defaultWidth + 'px';
       });
       document.addEventListener('mousedown', function (event) {
@@ -1756,7 +1889,8 @@
           event.preventDefault();
           var th = handle.parentElement;
           var index = Number(th.getAttribute('data-col-index'));
-          var col = document.querySelectorAll('colgroup col')[index];
+          var table = th.closest('table');
+          var col = table && table.querySelectorAll('colgroup col')[index];
           if (!col) return;
           var startX = event.clientX;
           var startWidth = parseInt(col.style.width, 10) || th.offsetWidth;
