@@ -1637,7 +1637,47 @@
       const organicModule = doc.querySelector('[data-report-module="02"]');
       const organicTable = organicModule && organicModule.querySelector(".organic-table");
       if (!organicModule || !organicTable) return;
-      if (organicTable.classList.contains("organic-rich-table")) return;
+      const enhanceRichOrganicTable = () => {
+        const richHead = organicTable.querySelector("thead");
+        if (!richHead) return;
+        const oh = (label, tip) => `<span class="th-label">${escapeHtml(label)}<span class="th-help" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">?</span></span>`;
+        const headers = [
+          ["#", "当前模块排序序号；默认按差距可计算、差距从小到大，以及搜索量排序生成。"],
+          ["关键词", "关键词与 01 总表一致，来自本任务已留底的西柚 ASIN 反查关键词数据。"],
+          ["月搜索量", "由 ABA 近 12 个月周搜索量聚合后的最近月搜索量；无月数据时回退显示最新周搜索量。"],
+          ["自己自然位", "目标 ASIN 在该关键词 ranks 中自然位 or 的最小 totalRank，按页码/页内位展示。"],
+          ["自然位标杆 1", "从已留底 ASIN 分析结果中排除自己后，选择自然位最靠前的第 1 个 ASIN；不补查新接口。"],
+          ["自然位标杆 2", "从已留底 ASIN 分析结果中排除自己后，选择自然位最靠前的第 2 个 ASIN；主图只引用 URL。"],
+          ["自然位标杆 3", "从已留底 ASIN 分析结果中排除自己后，选择自然位最靠前的第 3 个 ASIN；用于观察可追赶梯队。"],
+          ["与头部差距", "差距=我的自然位绝对位次-标杆 1 自然位绝对位次；正数代表我落后，负数代表我领先。"],
+        ];
+        richHead.innerHTML = `<tr>${headers.map(([label, tip], index) => `<th data-col-index="${index}">${oh(label, tip)}</th>`).join("")}</tr>`;
+
+        const oldColgroup = organicTable.querySelector("colgroup");
+        if (oldColgroup) oldColgroup.remove();
+        const colgroup = doc.createElement("colgroup");
+        [58, 220, 130, 150, 360, 360, 360, 150].forEach((width) => {
+          const col = doc.createElement("col");
+          col.style.width = `${width}px`;
+          col.dataset.defaultWidth = String(width);
+          colgroup.appendChild(col);
+        });
+        organicTable.insertBefore(colgroup, organicTable.firstChild);
+
+        const sortableColumns = new Set([0, 2, 3, 4, 5, 6, 7]);
+        richHead.querySelectorAll("th[data-col-index]").forEach((th) => {
+          const index = Number(th.dataset.colIndex);
+          if (sortableColumns.has(index)) {
+            th.dataset.sortable = "number";
+            th.insertAdjacentHTML("beforeend", '<button type="button" class="sort-button" data-sort-button title="点击按本列数值排序" aria-label="按本列数值排序"><span class="sort-up"></span><span class="sort-down"></span></button>');
+          }
+          th.insertAdjacentHTML("beforeend", '<span class="resize-handle" title="拖动调整列宽，双击恢复默认宽度" aria-hidden="true"></span>');
+        });
+      };
+      if (organicTable.classList.contains("organic-rich-table")) {
+        enhanceRichOrganicTable();
+        return;
+      }
 
       const summary = organicModule.querySelector(".module-summary");
       if (summary) summary.classList.add("organic-summary");
