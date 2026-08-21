@@ -1873,6 +1873,33 @@
       });
     };
     enhanceOrganicModule();
+    const syncOrganicTagsToMaster = () => {
+      const organicRows = Array.from(doc.querySelectorAll('[data-report-module="02"] .organic-rich-table tbody tr'));
+      if (!organicRows.length) return;
+      const organicCategoryMap = {
+        lead: { label: "自然位领先", className: "organic-chip-lead" },
+        close: { label: "自然位接近", className: "organic-chip-close" },
+        lag: { label: "自然位落后", className: "organic-chip-lag" },
+        none: { label: "未进自然位", className: "organic-chip-none" },
+        missing: { label: "数据缺失", className: "organic-chip-missing" }
+      };
+      const byKeyword = new Map();
+      organicRows.forEach((row) => {
+        const keyword = text(row.querySelector(".keyword-name") || row.cells[0]);
+        const category = row.dataset.organicCategory || "";
+        if (keyword && organicCategoryMap[category]) byKeyword.set(keyword, organicCategoryMap[category]);
+      });
+      if (!byKeyword.size) return;
+      rows.forEach((row) => {
+        const nameNode = row.cells[0] && row.cells[0].querySelector(".keyword-name");
+        const tagsNode = row.cells[0] && row.cells[0].querySelector(".keyword-tags");
+        if (!nameNode || !tagsNode || tagsNode.querySelector("[data-organic-master-tag]")) return;
+        const item = byKeyword.get(text(nameNode));
+        if (!item) return;
+        tagsNode.insertAdjacentHTML("beforeend", `<span class="keyword-chip ${item.className}" data-organic-master-tag="true">${escapeHtml(item.label)}</span>`);
+      });
+    };
+    syncOrganicTagsToMaster();
 
     doc.querySelectorAll(".asin").forEach((node) => {
       let img = node.querySelector("img");
