@@ -967,11 +967,10 @@
       .keyword-chip.cat-avoid { color: #dc2626; background: #fff1f1; }
       .keyword-chip.cat-season { color: #00806b; background: #e7fbf5; }
       .keyword-chip.cat-missing { color: #dc2626; background: #fff1f1; }
-      .keyword-chip.signal-good, .season-chip.signal-good, .conversion-chip.signal-good { color: #00806b; background: #e7fbf5; }
-      .keyword-chip.signal-mid, .season-chip.signal-mid, .conversion-chip.signal-mid { color: #175cd3; background: #eef5ff; }
-      .keyword-chip.signal-bad, .season-chip.signal-bad, .conversion-chip.signal-bad { color: #dc2626; background: #fff1f1; }
-      .conversion-chip { background: #eaf7f1; color: #0f8f61; }
-      .conversion-chip.pending { background: #fff1f1; color: #dc2626; }
+      .keyword-chip.signal-good, .season-chip.signal-good { color: #00806b; background: #e7fbf5; }
+      .keyword-chip.signal-mid, .season-chip.signal-mid { color: #175cd3; background: #eef5ff; }
+      .keyword-chip.signal-bad, .season-chip.signal-bad { color: #dc2626; background: #fff1f1; }
+      .conversion-chip, .conversion-chip.pending { background: transparent; color: #172033; padding: 0; border-radius: 0; font-size: 12px; font-weight: 800; }
       .season-chip { background: #eef5ff; color: #175cd3; }
       .difficulty-pill.low { background: #eaf7f1; color: #0f8f61; }
       .difficulty-pill.mid { background: #eef5ff; color: #175cd3; }
